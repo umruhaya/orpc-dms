@@ -1,0 +1,32 @@
+import { describe, expect, test } from "bun:test"
+import { DateTime } from "@repo/domain"
+import { convertEffectSchemaToOpenAPI } from "../../effect-schema-converter"
+
+describe("DateTime Union Deduplication", () => {
+  test("should normalize DateTime union to only first number and string types", () => {
+    const result = convertEffectSchemaToOpenAPI(DateTime)
+
+    expect(result).toEqual({
+      oneOf: [
+        {
+          type: "number",
+          description: "a number to be decoded into a DateTime.Utc",
+        },
+        {
+          type: "string",
+          description: "a string to be decoded into a DateTime.Utc",
+        },
+      ],
+      title: "DateTime",
+      description:
+        "A date and time value, accepts multiple formats: Unix timestamp (number), ISO string, or Date object",
+    })
+
+    // Verify we only have 2 items instead of the original 4
+    expect(result.oneOf).toHaveLength(2)
+
+    // Verify we have exactly one number type and one string type
+    const types = result.oneOf?.map((item) => item.type) || []
+    expect(types).toEqual(["number", "string"])
+  })
+})

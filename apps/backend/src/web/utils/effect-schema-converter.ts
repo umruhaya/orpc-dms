@@ -24,15 +24,12 @@ export function convertEffectSchemaToOpenAPI<In, Out>(
     depth: 0,
   }
 
-  // For Transformation schemas (like DateTime), don't use encodedBoundSchema as it loses annotations
-  // Instead, handle the transformation directly in convertAST
   return convertAST(schema.ast, context)
 }
 
 function convertAST(ast: AST, context: SchemaVisitContext): SchemaObject {
-  // Prevent infinite recursion for circular references
   if (context.visited.has(ast)) {
-    return { type: "object" } // Return a simple object reference
+    return { type: "object" }
   }
 
   if (context.depth > 10) {
@@ -45,7 +42,6 @@ function convertAST(ast: AST, context: SchemaVisitContext): SchemaObject {
   try {
     const result = convertASTNode(ast, context)
 
-    // Add annotations if present
     const annotations = extractAnnotations(ast)
     if (annotations) {
       Object.assign(result, annotations)
@@ -96,7 +92,6 @@ function convertLiteral(ast: AST): SchemaObject {
 
   const value = ast.literal
 
-  // Special case for null
   if (value === null) {
     return { type: "null" }
   }
@@ -122,7 +117,6 @@ function convertTypeLiteral(
     type: "object",
   }
 
-  // Handle index signatures first (records)
   if (ast.indexSignatures && ast.indexSignatures.length > 0) {
     const indexSig = ast.indexSignatures[0]
     if (indexSig) {
@@ -138,14 +132,12 @@ function convertTypeLiteral(
     for (const prop of ast.propertySignatures) {
       const propName = String(prop.name)
 
-      // Handle optional fields with Union types (Type | undefined)
       if (
         prop.isOptional &&
         prop.type._tag === "Union" &&
         prop.type.types.length === 2 &&
         prop.type.types.some((t: AST) => t._tag === "UndefinedKeyword")
       ) {
-        // Extract the non-undefined type
         const nonUndefinedType = prop.type.types.find(
           (t: AST) => t._tag !== "UndefinedKeyword",
         )
@@ -163,7 +155,6 @@ function convertTypeLiteral(
       }
     }
   } else if (!ast.indexSignatures?.length) {
-    // Empty objects still need properties and required arrays
     result.properties = {}
     result.required = []
   }
@@ -174,7 +165,6 @@ function convertTypeLiteral(
 function convertTuple(ast: AST, context: SchemaVisitContext): SchemaObject {
   if (ast._tag !== "TupleType") throw new Error("Expected TupleType AST")
 
-  // Handle S.Array() case: TupleType with empty elements and rest array
   if (
     ast.elements &&
     ast.elements.length === 0 &&
@@ -189,7 +179,6 @@ function convertTuple(ast: AST, context: SchemaVisitContext): SchemaObject {
         items: convertAST(restItem.type, context),
       }
 
-      // Extract constraints from annotations
       const jsonSchemaAnnotation = extractJSONSchemaAnnotation(ast)
       if (jsonSchemaAnnotation) {
         Object.assign(result, jsonSchemaAnnotation)
@@ -199,7 +188,6 @@ function convertTuple(ast: AST, context: SchemaVisitContext): SchemaObject {
     }
   }
 
-  // Handle NonEmptyArray case: single element with rest
   if (
     ast.elements &&
     ast.elements.length === 1 &&
@@ -225,21 +213,17 @@ function convertTuple(ast: AST, context: SchemaVisitContext): SchemaObject {
     }
   }
 
-  // Handle actual tuple types
   const result: SchemaObject = {
     type: "array",
   }
 
   if (ast.elements && ast.elements.length > 0) {
-    // Fixed tuple with specific types at each position
     if (ast.elements.length === 1) {
-      // Single element tuple - use items directly
       const firstElement = ast.elements[0]
       if (firstElement) {
         result.items = convertAST(firstElement.type, context)
       }
     } else {
-      // Multiple elements - use items array for ordered types
       result.items = ast.elements.map((elem) => convertAST(elem.type, context))
     }
 
@@ -253,7 +237,6 @@ function convertTuple(ast: AST, context: SchemaVisitContext): SchemaObject {
   }
 
   if (ast.rest && ast.rest.length > 0) {
-    // Additional items beyond the fixed tuple elements
     const firstRestElement = ast.rest[0]
     if (firstRestElement) {
       result.additionalItems = convertAST(firstRestElement.type, context)
@@ -272,7 +255,6 @@ function convertUnion(ast: AST, context: SchemaVisitContext): SchemaObject {
     throw new Error("Union AST must have types property")
   }
 
-  // Special case: if all union members are literals of the same type, convert to enum
   const allLiterals = ast.types.every((type: AST) => type._tag === "Literal")
   if (allLiterals) {
     const values = ast.types.map((type: AST) => {
@@ -297,38 +279,33 @@ function convertUnion(ast: AST, context: SchemaVisitContext): SchemaObject {
     }
   }
 
-  // Special case: single union member
   if (ast.types.length === 1) {
     return convertAST(ast.types[0], context)
   }
 
-  // Special case: handle duplicate types (deduplicate them)
-  const uniqueTypes = new Map<string, AST>()
+  const seenTypes = new Map<string, { ast: AST; converted: SchemaObject }>()
   for (const type of ast.types) {
     const converted = convertAST(type, context)
-    const key = JSON.stringify(converted)
-    if (!uniqueTypes.has(key)) {
-      uniqueTypes.set(key, type)
+    const coreTypeKey = getCoreTypeKey(converted)
+
+    if (!seenTypes.has(coreTypeKey)) {
+      seenTypes.set(coreTypeKey, { ast: type, converted })
     }
   }
 
-  // If after deduplication we have only one type, return it directly
-  if (uniqueTypes.size === 1) {
-    const singleType = Array.from(uniqueTypes.values())[0]
-    if (singleType) {
-      return convertAST(singleType, context)
+  if (seenTypes.size === 1) {
+    const singleEntry = Array.from(seenTypes.values())[0]
+    if (singleEntry) {
+      return singleEntry.converted
     }
   }
 
-  const oneOf = Array.from(uniqueTypes.values()).map((type: AST) =>
-    convertAST(type, context),
-  )
+  const oneOf = Array.from(seenTypes.values()).map((entry) => entry.converted)
 
   const result: SchemaObject = { oneOf }
 
-  // Check for discriminated union
   const discriminator = detectDiscriminatorFromAST(
-    Array.from(uniqueTypes.values()),
+    Array.from(seenTypes.values()).map((entry) => entry.ast),
   )
   if (discriminator) {
     result.discriminator = { propertyName: discriminator }
@@ -345,10 +322,8 @@ function convertRefinement(
     throw new Error("Expected Refinement AST")
   }
 
-  // Start with the base type
   const result = convertAST(ast.from, context)
 
-  // Extract and merge all JSONSchema annotations from the refinement chain
   const allConstraints = extractAllRefinementConstraints(ast)
   Object.assign(result, allConstraints)
 
@@ -362,13 +337,11 @@ function extractAllRefinementConstraints(ast: AST): Record<string, unknown> {
 
   const constraints: Record<string, unknown> = {}
 
-  // Extract constraints from current refinement
   const jsonSchemaAnnotation = extractJSONSchemaAnnotation(ast)
   if (jsonSchemaAnnotation) {
     Object.assign(constraints, jsonSchemaAnnotation)
   }
 
-  // If the 'from' is also a refinement, recursively extract its constraints
   if (ast.from && ast.from._tag === "Refinement") {
     const fromConstraints = extractAllRefinementConstraints(ast.from)
     Object.assign(constraints, fromConstraints)
@@ -382,13 +355,10 @@ function convertSuspend(ast: AST, context: SchemaVisitContext): SchemaObject {
     throw new Error("Expected Suspend AST")
   }
 
-  // For suspended schemas (lazy/recursive), we need to evaluate the function
-  // This is a simplified approach - in practice, you might need more sophisticated handling
   try {
     const resolvedAST = ast.f()
     return convertAST(resolvedAST, context)
   } catch {
-    // Fallback for circular references
     return { type: "object" }
   }
 }
@@ -401,15 +371,12 @@ function convertTransformation(
     throw new Error("Expected Transformation AST")
   }
 
-  // For transformations, we want the "from" (encoded/input) side for OpenAPI docs
   const baseResult = ast.from
     ? convertAST(ast.from, context)
     : { type: "string" }
 
-  // BUT we also want to preserve any custom annotations from the transformation itself
   const transformationAnnotations = extractAnnotations(ast)
 
-  // Check if this is a DateTime transformation for special handling
   const isDateTime =
     ast.annotations &&
     (Object.getOwnPropertySymbols(ast.annotations).some(
@@ -427,7 +394,6 @@ function convertTransformation(
         .includes("time"))
 
   if (isDateTime && baseResult.type === "number") {
-    // Override with DateTime-specific formatting for number types
     const result = baseResult as SchemaObject & {
       format?: string
       description?: string
@@ -441,7 +407,6 @@ function convertTransformation(
     }
   }
 
-  // Apply transformation-level annotations (these are the custom ones we want to preserve)
   if (transformationAnnotations) {
     Object.assign(baseResult, transformationAnnotations)
   }
@@ -457,7 +422,6 @@ function convertDeclaration(
     throw new Error("Expected Declaration AST")
   }
 
-  // Check if this is a DateTime declaration by looking at annotations
   const annotations = extractAnnotations(ast)
   const isDateTime =
     annotations?.title?.toString().toLowerCase().includes("time") ||
@@ -470,25 +434,21 @@ function convertDeclaration(
       ))
 
   if (isDateTime) {
-    // Return number type for timestamp representation
     const result: SchemaObject = {
       type: "number",
       format: "timestamp",
       description: "Unix timestamp in milliseconds",
     }
 
-    // Extract custom JSONSchema annotations
     const jsonSchemaAnnotation = extractJSONSchemaAnnotation(ast)
     if (jsonSchemaAnnotation) {
       Object.assign(result, jsonSchemaAnnotation)
     }
 
-    // Extract other annotations but preserve DateTime-specific formatting
     if (annotations) {
       const { title, description, examples, ...rest } = annotations
       Object.assign(result, rest)
 
-      // Only use custom title/description if they're not auto-generated
       if (title && !isAutoGeneratedTitle(title)) {
         result.title = title as string
       }
@@ -503,7 +463,6 @@ function convertDeclaration(
     return result
   }
 
-  // For other declarations, try to extract from type information
   if (
     ast.typeParameters &&
     ast.typeParameters.length > 0 &&
@@ -611,12 +570,10 @@ function isAutoGeneratedTitle(value: unknown): boolean {
     "itemsCount",
   ]
 
-  // Check for exact matches first
   if (autoTitles.includes(value)) {
     return true
   }
 
-  // Check for function call patterns, but be more specific
   const functionCallPatterns = [
     /^(greaterThan|lessThan|greaterThanOrEqualTo|lessThanOrEqualTo|minLength|maxLength|minItems|maxItems|itemsCount|pattern|multipleOf|between)\(\d+\)$/,
     /^(nonNegative|positive)\(\)$/,
@@ -628,7 +585,6 @@ function isAutoGeneratedTitle(value: unknown): boolean {
 function isAutoGeneratedDescription(value: unknown): boolean {
   if (typeof value !== "string") return false
 
-  // Auto-generated descriptions typically start with these patterns
   const autoDescriptionPatterns = [
     /^a string$/,
     /^a number$/,
@@ -657,19 +613,16 @@ function isAutoGeneratedDescription(value: unknown): boolean {
 function detectDiscriminatorFromAST(types: AST[]): string | null {
   if (types.length < 2) return null
 
-  // Check if all types are TypeLiterals with a common literal property
   const objectTypes = types.filter(
     (t) => t._tag === "TypeLiteral" && t.propertySignatures,
   )
   if (objectTypes.length !== types.length) return null
 
-  // Get the first object's property signatures to compare
   const firstType = objectTypes[0]
   if (firstType?._tag !== "TypeLiteral" || !firstType.propertySignatures) {
     return null
   }
 
-  // Find common properties that are literals
   const firstProps = firstType.propertySignatures.map((p) => String(p.name))
 
   for (const propName of firstProps) {
@@ -710,6 +663,22 @@ function detectDiscriminatorFromAST(types: AST[]): string | null {
   }
 
   return null
+}
+
+function getCoreTypeKey(schema: SchemaObject): string {
+  const core = {
+    type: schema.type,
+    ...(schema.enum && { enum: schema.enum }),
+    ...(schema.properties && {
+      properties: Object.keys(schema.properties).sort(),
+    }),
+    ...(schema.items && {
+      items: getCoreTypeKey(schema.items as SchemaObject),
+    }),
+    ...(schema.oneOf && { oneOf: true }),
+  }
+
+  return JSON.stringify(core)
 }
 
 export class EffectSchemaConverter implements ConditionalSchemaConverter {
