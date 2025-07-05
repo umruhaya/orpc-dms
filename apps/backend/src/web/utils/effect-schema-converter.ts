@@ -6,14 +6,10 @@ import type {
 } from "@orpc/openapi"
 import type { OpenAPIV3_1 } from "@scalar/openapi-types"
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import { Schema as S } from "effect"
+import type { Schema as S } from "effect"
 import type { AST } from "effect/SchemaAST"
 
 type SchemaObject = OpenAPIV3_1.SchemaObject
-
-// Helper to cast Effect's untyped AST to any for property access
-// biome-ignore lint/suspicious/noExplicitAny: Effect Schema AST is untyped
-const toAst = (ast: unknown) => ast as any
 
 interface SchemaVisitContext {
   visited: Set<AST>
@@ -28,10 +24,9 @@ export function convertEffectSchemaToOpenAPI<In, Out>(
     depth: 0,
   }
 
-  // preserve refinements up to the first transformation - https://effect.website/docs/schema/projections/#encodedboundschema
-  const simplifiedSchema = S.encodedBoundSchema(schema)
-
-  return convertAST(simplifiedSchema.ast, context)
+  // For Transformation schemas (like DateTime), don't use encodedBoundSchema as it loses annotations
+  // Instead, handle the transformation directly in convertAST
+  return convertAST(schema.ast, context)
 }
 
 function convertAST(ast: AST, context: SchemaVisitContext): SchemaObject {
@@ -87,16 +82,19 @@ function convertASTNode(ast: AST, context: SchemaVisitContext): SchemaObject {
       return convertRefinement(ast, context)
     case "Suspend":
       return convertSuspend(ast, context)
+    case "Transformation":
+      return convertTransformation(ast, context)
     case "Declaration":
-      return {}
+      return convertDeclaration(ast, context)
     default:
       throw new Error(`Unsupported AST node type: ${ast._tag}`)
   }
 }
 
-function convertLiteral(ast: unknown): SchemaObject {
-  const astObj = toAst(ast)
-  const value = astObj.literal
+function convertLiteral(ast: AST): SchemaObject {
+  if (ast._tag !== "Literal") throw new Error("Expected Literal AST")
+
+  const value = ast.literal
 
   // Special case for null
   if (value === null) {
@@ -115,53 +113,56 @@ function convertLiteral(ast: unknown): SchemaObject {
 }
 
 function convertTypeLiteral(
-  ast: unknown,
+  ast: AST,
   context: SchemaVisitContext,
 ): SchemaObject {
-  const astObj = toAst(ast)
+  if (ast._tag !== "TypeLiteral") throw new Error("Expected TypeLiteral AST")
+
   const result: SchemaObject = {
     type: "object",
   }
 
   // Handle index signatures first (records)
-  if (astObj.indexSignatures && astObj.indexSignatures.length > 0) {
-    const indexSig = astObj.indexSignatures[0]
-    result.additionalProperties = convertAST(indexSig.type, context)
+  if (ast.indexSignatures && ast.indexSignatures.length > 0) {
+    const indexSig = ast.indexSignatures[0]
+    if (indexSig) {
+      result.additionalProperties = convertAST(indexSig.type, context)
+    }
   }
 
   // Handle object types with properties
-  if (astObj.propertySignatures && astObj.propertySignatures.length > 0) {
+  if (ast.propertySignatures && ast.propertySignatures.length > 0) {
     result.properties = {}
     result.required = []
 
-    for (const prop of astObj.propertySignatures) {
+    for (const prop of ast.propertySignatures) {
+      const propName = String(prop.name)
+
       // Handle optional fields with Union types (Type | undefined)
       if (
         prop.isOptional &&
         prop.type._tag === "Union" &&
         prop.type.types.length === 2 &&
-        prop.type.types.some(
-          (t: unknown) => toAst(t)._tag === "UndefinedKeyword",
-        )
+        prop.type.types.some((t: AST) => t._tag === "UndefinedKeyword")
       ) {
         // Extract the non-undefined type
         const nonUndefinedType = prop.type.types.find(
-          (t: unknown) => toAst(t)._tag !== "UndefinedKeyword",
+          (t: AST) => t._tag !== "UndefinedKeyword",
         )
         if (result.properties && nonUndefinedType) {
-          result.properties[prop.name] = convertAST(nonUndefinedType, context)
+          result.properties[propName] = convertAST(nonUndefinedType, context)
         }
       } else {
         if (result.properties) {
-          result.properties[prop.name] = convertAST(prop.type, context)
+          result.properties[propName] = convertAST(prop.type, context)
         }
       }
 
       if (!prop.isOptional && result.required) {
-        result.required.push(prop.name)
+        result.required.push(propName)
       }
     }
-  } else if (!astObj.indexSignatures?.length) {
+  } else if (!ast.indexSignatures?.length) {
     // Empty objects still need properties and required arrays
     result.properties = {}
     result.required = []
@@ -170,47 +171,58 @@ function convertTypeLiteral(
   return result
 }
 
-function convertTuple(ast: unknown, context: SchemaVisitContext): SchemaObject {
-  const astObj = toAst(ast)
+function convertTuple(ast: AST, context: SchemaVisitContext): SchemaObject {
+  if (ast._tag !== "TupleType") throw new Error("Expected TupleType AST")
 
   // Handle S.Array() case: TupleType with empty elements and rest array
   if (
-    astObj.elements &&
-    astObj.elements.length === 0 &&
-    astObj.rest &&
-    astObj.rest.length === 1
+    ast.elements &&
+    ast.elements.length === 0 &&
+    ast.rest &&
+    ast.rest.length === 1
   ) {
     // This is an array type (S.Array)
-    const result: SchemaObject = {
-      type: "array",
-      items: convertAST(astObj.rest[0].type, context),
-    }
+    const restItem = ast.rest[0]
+    if (restItem) {
+      const result: SchemaObject = {
+        type: "array",
+        items: convertAST(restItem.type, context),
+      }
 
-    // Extract constraints from annotations
-    const jsonSchemaAnnotation = extractJSONSchemaAnnotation(ast)
-    if (jsonSchemaAnnotation) {
-      Object.assign(result, jsonSchemaAnnotation)
-    }
+      // Extract constraints from annotations
+      const jsonSchemaAnnotation = extractJSONSchemaAnnotation(ast)
+      if (jsonSchemaAnnotation) {
+        Object.assign(result, jsonSchemaAnnotation)
+      }
 
-    return result
+      return result
+    }
   }
 
   // Handle NonEmptyArray case: single element with rest
   if (
-    astObj.elements &&
-    astObj.elements.length === 1 &&
-    astObj.rest &&
-    astObj.rest.length === 1 &&
-    toAst(astObj.elements[0]).type._tag === toAst(astObj.rest[0]).type._tag
+    ast.elements &&
+    ast.elements.length === 1 &&
+    ast.rest &&
+    ast.rest.length === 1
   ) {
-    // This is NonEmptyArray - treat as simple array with minItems
-    const result: SchemaObject = {
-      type: "array",
-      items: convertAST(astObj.elements[0].type, context),
-      minItems: 1,
-    }
+    const firstElement = ast.elements[0]
+    const restElement = ast.rest[0]
 
-    return result
+    if (
+      firstElement &&
+      restElement &&
+      firstElement.type._tag === restElement.type._tag
+    ) {
+      // This is NonEmptyArray - treat as simple array with minItems
+      const result: SchemaObject = {
+        type: "array",
+        items: convertAST(firstElement.type, context),
+        minItems: 1,
+      }
+
+      return result
+    }
   }
 
   // Handle actual tuple types
@@ -218,50 +230,57 @@ function convertTuple(ast: unknown, context: SchemaVisitContext): SchemaObject {
     type: "array",
   }
 
-  if (astObj.elements && astObj.elements.length > 0) {
+  if (ast.elements && ast.elements.length > 0) {
     // Fixed tuple with specific types at each position
-    if (astObj.elements.length === 1) {
+    if (ast.elements.length === 1) {
       // Single element tuple - use items directly
-      result.items = convertAST(astObj.elements[0].type, context)
+      const firstElement = ast.elements[0]
+      if (firstElement) {
+        result.items = convertAST(firstElement.type, context)
+      }
     } else {
       // Multiple elements - use items array for ordered types
-      result.items = astObj.elements.map((elem: unknown) =>
-        convertAST(toAst(elem).type, context),
-      )
+      result.items = ast.elements.map((elem) => convertAST(elem.type, context))
     }
 
-    const requiredCount = astObj.elements.filter(
-      (elem: unknown) => !toAst(elem).isOptional,
-    ).length
-    const totalCount = astObj.elements.length
+    const requiredCount = ast.elements.filter((elem) => !elem.isOptional).length
+    const totalCount = ast.elements.length
 
     result.minItems = requiredCount
-    if (!astObj.rest || astObj.rest.length === 0) {
+    if (!ast.rest || ast.rest.length === 0) {
       result.maxItems = totalCount
     }
   }
 
-  if (astObj.rest && astObj.rest.length > 0) {
+  if (ast.rest && ast.rest.length > 0) {
     // Additional items beyond the fixed tuple elements
-    result.additionalItems = convertAST(astObj.rest[0].type, context)
+    const firstRestElement = ast.rest[0]
+    if (firstRestElement) {
+      result.additionalItems = convertAST(firstRestElement.type, context)
+    }
   }
 
   return result
 }
 
-function convertUnion(ast: unknown, context: SchemaVisitContext): SchemaObject {
-  const astObj = toAst(ast)
+function convertUnion(ast: AST, context: SchemaVisitContext): SchemaObject {
+  if (ast._tag !== "Union") {
+    throw new Error("Expected Union AST")
+  }
 
-  if (!astObj.types || astObj.types.length === 0) {
+  if (!ast.types || ast.types.length === 0) {
     throw new Error("Union AST must have types property")
   }
 
   // Special case: if all union members are literals of the same type, convert to enum
-  const allLiterals = astObj.types.every(
-    (type: unknown) => toAst(type)._tag === "Literal",
-  )
+  const allLiterals = ast.types.every((type: AST) => type._tag === "Literal")
   if (allLiterals) {
-    const values = astObj.types.map((type: unknown) => toAst(type).literal)
+    const values = ast.types.map((type: AST) => {
+      if (type._tag !== "Literal") {
+        throw new Error("Expected Literal AST")
+      }
+      return type.literal
+    })
     const firstType = typeof values[0]
     const sameType = values.every((val: unknown) => typeof val === firstType)
 
@@ -279,13 +298,13 @@ function convertUnion(ast: unknown, context: SchemaVisitContext): SchemaObject {
   }
 
   // Special case: single union member
-  if (astObj.types.length === 1) {
-    return convertAST(astObj.types[0], context)
+  if (ast.types.length === 1) {
+    return convertAST(ast.types[0], context)
   }
 
   // Special case: handle duplicate types (deduplicate them)
   const uniqueTypes = new Map<string, AST>()
-  for (const type of astObj.types) {
+  for (const type of ast.types) {
     const converted = convertAST(type, context)
     const key = JSON.stringify(converted)
     if (!uniqueTypes.has(key)) {
@@ -319,13 +338,15 @@ function convertUnion(ast: unknown, context: SchemaVisitContext): SchemaObject {
 }
 
 function convertRefinement(
-  ast: unknown,
+  ast: AST,
   context: SchemaVisitContext,
 ): SchemaObject {
-  const astObj = toAst(ast)
+  if (ast._tag !== "Refinement") {
+    throw new Error("Expected Refinement AST")
+  }
 
   // Start with the base type
-  const result = convertAST(astObj.from, context)
+  const result = convertAST(ast.from, context)
 
   // Extract and merge all JSONSchema annotations from the refinement chain
   const allConstraints = extractAllRefinementConstraints(ast)
@@ -334,10 +355,11 @@ function convertRefinement(
   return result
 }
 
-function extractAllRefinementConstraints(
-  ast: unknown,
-): Record<string, unknown> {
-  const astObj = toAst(ast)
+function extractAllRefinementConstraints(ast: AST): Record<string, unknown> {
+  if (ast._tag !== "Refinement") {
+    return {}
+  }
+
   const constraints: Record<string, unknown> = {}
 
   // Extract constraints from current refinement
@@ -347,24 +369,23 @@ function extractAllRefinementConstraints(
   }
 
   // If the 'from' is also a refinement, recursively extract its constraints
-  if (astObj.from && toAst(astObj.from)._tag === "Refinement") {
-    const fromConstraints = extractAllRefinementConstraints(astObj.from)
+  if (ast.from && ast.from._tag === "Refinement") {
+    const fromConstraints = extractAllRefinementConstraints(ast.from)
     Object.assign(constraints, fromConstraints)
   }
 
   return constraints
 }
 
-function convertSuspend(
-  ast: unknown,
-  context: SchemaVisitContext,
-): SchemaObject {
-  const astObj = toAst(ast)
+function convertSuspend(ast: AST, context: SchemaVisitContext): SchemaObject {
+  if (ast._tag !== "Suspend") {
+    throw new Error("Expected Suspend AST")
+  }
 
   // For suspended schemas (lazy/recursive), we need to evaluate the function
   // This is a simplified approach - in practice, you might need more sophisticated handling
   try {
-    const resolvedAST = astObj.f().ast
+    const resolvedAST = ast.f()
     return convertAST(resolvedAST, context)
   } catch {
     // Fallback for circular references
@@ -372,68 +393,191 @@ function convertSuspend(
   }
 }
 
-function extractJSONSchemaAnnotation(
-  ast: unknown,
-): Record<string, unknown> | null {
-  const astObj = toAst(ast)
-  if (!astObj.annotations) return null
+function convertTransformation(
+  ast: AST,
+  context: SchemaVisitContext,
+): SchemaObject {
+  if (ast._tag !== "Transformation") {
+    throw new Error("Expected Transformation AST")
+  }
+
+  // For transformations, we want the "from" (encoded/input) side for OpenAPI docs
+  const baseResult = ast.from
+    ? convertAST(ast.from, context)
+    : { type: "string" }
+
+  // BUT we also want to preserve any custom annotations from the transformation itself
+  const transformationAnnotations = extractAnnotations(ast)
+
+  // Check if this is a DateTime transformation for special handling
+  const isDateTime =
+    ast.annotations &&
+    (Object.getOwnPropertySymbols(ast.annotations).some(
+      (sym) =>
+        sym.toString().includes("DateTimeUtc") ||
+        sym.toString().includes("DateTime"),
+    ) ||
+      transformationAnnotations?.title
+        ?.toString()
+        .toLowerCase()
+        .includes("time") ||
+      transformationAnnotations?.description
+        ?.toString()
+        .toLowerCase()
+        .includes("time"))
+
+  if (isDateTime && baseResult.type === "number") {
+    // Override with DateTime-specific formatting for number types
+    const result = baseResult as SchemaObject & {
+      format?: string
+      description?: string
+    }
+    result.format = "timestamp"
+    if (
+      !transformationAnnotations?.description ||
+      isAutoGeneratedDescription(transformationAnnotations.description)
+    ) {
+      result.description = "Unix timestamp in milliseconds"
+    }
+  }
+
+  // Apply transformation-level annotations (these are the custom ones we want to preserve)
+  if (transformationAnnotations) {
+    Object.assign(baseResult, transformationAnnotations)
+  }
+
+  return baseResult as SchemaObject
+}
+
+function convertDeclaration(
+  ast: AST,
+  context: SchemaVisitContext,
+): SchemaObject {
+  if (ast._tag !== "Declaration") {
+    throw new Error("Expected Declaration AST")
+  }
+
+  // Check if this is a DateTime declaration by looking at annotations
+  const annotations = extractAnnotations(ast)
+  const isDateTime =
+    annotations?.title?.toString().toLowerCase().includes("time") ||
+    annotations?.description?.toString().toLowerCase().includes("time") ||
+    (ast.annotations &&
+      Object.getOwnPropertySymbols(ast.annotations).some(
+        (sym) =>
+          sym.toString().includes("DateTimeUtc") ||
+          sym.toString().includes("DateTime"),
+      ))
+
+  if (isDateTime) {
+    // Return number type for timestamp representation
+    const result: SchemaObject = {
+      type: "number",
+      format: "timestamp",
+      description: "Unix timestamp in milliseconds",
+    }
+
+    // Extract custom JSONSchema annotations
+    const jsonSchemaAnnotation = extractJSONSchemaAnnotation(ast)
+    if (jsonSchemaAnnotation) {
+      Object.assign(result, jsonSchemaAnnotation)
+    }
+
+    // Extract other annotations but preserve DateTime-specific formatting
+    if (annotations) {
+      const { title, description, examples, ...rest } = annotations
+      Object.assign(result, rest)
+
+      // Only use custom title/description if they're not auto-generated
+      if (title && !isAutoGeneratedTitle(title)) {
+        result.title = title as string
+      }
+      if (description && !isAutoGeneratedDescription(description)) {
+        result.description = description as string
+      }
+      if (examples) {
+        result.examples = examples
+      }
+    }
+
+    return result
+  }
+
+  // For other declarations, try to extract from type information
+  if (
+    ast.typeParameters &&
+    ast.typeParameters.length > 0 &&
+    ast.typeParameters[0]
+  ) {
+    return convertAST(ast.typeParameters[0], context)
+  }
+
+  // Default fallback
+  return { type: "string" }
+}
+
+function extractJSONSchemaAnnotation(ast: AST): Record<string, unknown> | null {
+  if (!ast.annotations) return null
 
   // Look for JSONSchema annotation symbol
-  const symbols = Object.getOwnPropertySymbols(astObj.annotations)
+  const symbols = Object.getOwnPropertySymbols(ast.annotations)
   for (const symbol of symbols) {
     const keyStr = symbol.toString()
     if (keyStr.includes("JSONSchema")) {
-      const value = astObj.annotations[symbol]
-      // Convert OpenAPI 3.1 style exclusive bounds to OpenAPI 3.0 style
-      const result = { ...value }
+      const value = ast.annotations[symbol]
+      if (typeof value === "object" && value !== null) {
+        // Convert OpenAPI 3.1 style exclusive bounds to OpenAPI 3.0 style
+        const result = { ...value } as Record<string, unknown>
 
-      if (typeof result.exclusiveMinimum === "number") {
-        const min = result.exclusiveMinimum
-        delete result.exclusiveMinimum
-        result.minimum = min
-        result.exclusiveMinimum = true
+        if (typeof result.exclusiveMinimum === "number") {
+          const min = result.exclusiveMinimum
+          delete result.exclusiveMinimum
+          result.minimum = min
+          result.exclusiveMinimum = true
+        }
+
+        if (typeof result.exclusiveMaximum === "number") {
+          const max = result.exclusiveMaximum
+          delete result.exclusiveMaximum
+          result.maximum = max
+          result.exclusiveMaximum = true
+        }
+
+        return result as Record<string, unknown>
       }
-
-      if (typeof result.exclusiveMaximum === "number") {
-        const max = result.exclusiveMaximum
-        delete result.exclusiveMaximum
-        result.maximum = max
-        result.exclusiveMaximum = true
-      }
-
-      return result as Record<string, unknown>
     }
   }
 
   return null
 }
 
-function extractAnnotations(ast: unknown): Partial<SchemaObject> | null {
-  const astObj = toAst(ast)
-  if (!astObj.annotations) return null
+function extractAnnotations(ast: AST): Partial<SchemaObject> | null {
+  if (!ast.annotations) return null
 
   const result: Partial<SchemaObject> = {}
 
   // Check both string keys and symbol keys
   const allKeys = [
-    ...Object.keys(astObj.annotations),
-    ...Object.getOwnPropertySymbols(astObj.annotations),
+    ...Object.keys(ast.annotations),
+    ...Object.getOwnPropertySymbols(ast.annotations),
   ]
 
   for (const key of allKeys) {
     const keyStr = key.toString()
-    const value = astObj.annotations[key]
+    const value = ast.annotations[key]
 
     if (keyStr.includes("Title")) {
-      if (!isAutoGeneratedTitle(value)) {
+      if (value != null && !isAutoGeneratedTitle(value)) {
         result.title = value as string
       }
     } else if (keyStr.includes("Description")) {
-      if (!isAutoGeneratedDescription(value)) {
+      if (value != null && !isAutoGeneratedDescription(value)) {
         result.description = value as string
       }
     } else if (keyStr.includes("Examples")) {
-      result.examples = value as unknown[]
+      if (value != null) {
+        result.examples = value as unknown[]
+      }
     }
   }
 
@@ -467,84 +611,99 @@ function isAutoGeneratedTitle(value: unknown): boolean {
     "itemsCount",
   ]
 
-  return autoTitles.some(
-    (auto) =>
-      value === auto ||
-      value.includes("(") || // function call syntax like "greaterThan(0)" or "minItems(1)"
-      value.includes("minLength") ||
-      value.includes("maxLength") ||
-      value.includes("minItems") ||
-      value.includes("maxItems") ||
-      value.includes("itemsCount") ||
-      value.includes("pattern") ||
-      value.includes("multipleOf") ||
-      value.includes("between") ||
-      value.includes("nonNegative") ||
-      value.includes("positive"),
-  )
+  // Check for exact matches first
+  if (autoTitles.includes(value)) {
+    return true
+  }
+
+  // Check for function call patterns, but be more specific
+  const functionCallPatterns = [
+    /^(greaterThan|lessThan|greaterThanOrEqualTo|lessThanOrEqualTo|minLength|maxLength|minItems|maxItems|itemsCount|pattern|multipleOf|between)\(\d+\)$/,
+    /^(nonNegative|positive)\(\)$/,
+  ]
+
+  return functionCallPatterns.some((pattern) => pattern.test(value))
 }
 
 function isAutoGeneratedDescription(value: unknown): boolean {
   if (typeof value !== "string") return false
 
+  // Auto-generated descriptions typically start with these patterns
   const autoDescriptionPatterns = [
-    "a string",
-    "a number",
-    "a boolean",
-    "an integer",
-    "character(s)",
-    "divisible by",
-    "less than",
-    "greater than",
-    "between",
-    "non-negative",
-    "positive",
-    "non empty",
-    "matching the pattern",
-    "a positive number",
-    "a number less than",
-    "a number greater than",
-    "an array of at least",
-    "an array of at most",
-    "an array of exactly",
+    /^a string$/,
+    /^a number$/,
+    /^a boolean$/,
+    /^an integer$/,
+    /character\(s\)$/,
+    /^divisible by/,
+    /^less than/,
+    /^greater than/,
+    /^between/,
+    /^non-negative/,
+    /^positive/,
+    /^non empty/,
+    /^matching the pattern/,
+    /^a positive number$/,
+    /^a number less than/,
+    /^a number greater than/,
+    /^an array of at least/,
+    /^an array of at most/,
+    /^an array of exactly/,
   ]
 
-  return autoDescriptionPatterns.some((pattern) => value.includes(pattern))
+  return autoDescriptionPatterns.some((pattern) => pattern.test(value))
 }
 
-function detectDiscriminatorFromAST(types: unknown[]): string | null {
+function detectDiscriminatorFromAST(types: AST[]): string | null {
   if (types.length < 2) return null
 
   // Check if all types are TypeLiterals with a common literal property
   const objectTypes = types.filter(
-    (t) => toAst(t)._tag === "TypeLiteral" && toAst(t).propertySignatures,
+    (t) => t._tag === "TypeLiteral" && t.propertySignatures,
   )
   if (objectTypes.length !== types.length) return null
 
+  // Get the first object's property signatures to compare
+  const firstType = objectTypes[0]
+  if (firstType?._tag !== "TypeLiteral" || !firstType.propertySignatures) {
+    return null
+  }
+
   // Find common properties that are literals
-  const firstProps =
-    toAst(objectTypes[0]).propertySignatures?.map(
-      (p: unknown) => toAst(p).name,
-    ) || []
+  const firstProps = firstType.propertySignatures.map((p) => String(p.name))
 
   for (const propName of firstProps) {
-    const allHaveProp = objectTypes.every((type) =>
-      toAst(type).propertySignatures.some(
-        (p: unknown) =>
-          toAst(p).name === propName && toAst(toAst(p).type)._tag === "Literal",
-      ),
-    )
+    const allHaveProp = objectTypes.every((type) => {
+      if (type._tag !== "TypeLiteral" || !type.propertySignatures) {
+        return false
+      }
+      return type.propertySignatures.some(
+        (p) => String(p.name) === propName && p.type._tag === "Literal",
+      )
+    })
 
     if (allHaveProp) {
-      const values = objectTypes.map((type) => {
-        const prop = toAst(type).propertySignatures.find(
-          (p: unknown) => toAst(p).name === propName,
-        )
-        return toAst(toAst(prop).type).literal
-      })
+      const values = objectTypes
+        .map((type) => {
+          if (type._tag !== "TypeLiteral" || !type.propertySignatures) {
+            return null
+          }
+          const prop = type.propertySignatures.find(
+            (p) => String(p.name) === propName,
+          )
+          if (prop?.type._tag === "Literal") {
+            return prop.type.literal
+          }
+          return null
+        })
+        .filter((v) => v !== null)
+
       const uniqueValues = new Set(values)
 
-      if (uniqueValues.size === values.length) {
+      if (
+        uniqueValues.size === values.length &&
+        values.length === objectTypes.length
+      ) {
         return propName
       }
     }

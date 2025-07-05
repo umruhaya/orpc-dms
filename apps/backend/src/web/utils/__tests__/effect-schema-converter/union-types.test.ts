@@ -54,6 +54,9 @@ describe("Effect Schema Converter - Union Types", () => {
       const result = convertEffectSchemaToOpenAPI(schema)
 
       expect(result).toEqual({
+        discriminator: {
+          propertyName: "type",
+        },
         oneOf: [
           {
             type: "object",
@@ -101,7 +104,7 @@ describe("Effect Schema Converter - Union Types", () => {
       const result = convertEffectSchemaToOpenAPI(schema)
 
       expect(result).toEqual({
-        oneOf: [{ type: "string" }, { type: "undefined" }],
+        oneOf: [{ type: "string" }, {}],
       })
     })
   })

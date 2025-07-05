@@ -33,14 +33,26 @@ const DateTimeBase = S.asSchema(
     S.DateTimeUtcFromDate,
     S.DateTimeUtcFromSelf,
   ).annotations({
+    title: "DateTime",
     description:
-      "A date and time value, can be a number (timestamp) or a string (ISO format)",
+      "A date and time value, accepts multiple formats: Unix timestamp (number), ISO string, or Date object",
     identifier: "DateTime",
     message: (_issue) => "Invalid date/time format",
     jsonSchema: {
-      type: "number",
-      format: "date-time",
-      examples: [1696156800000, Date.now()],
+      oneOf: [
+        {
+          type: "number",
+          format: "timestamp",
+          description: "Unix timestamp in milliseconds",
+          examples: [1696156800000, Date.now()],
+        },
+        {
+          type: "string",
+          format: "date-time",
+          description: "ISO 8601 date-time string",
+          examples: ["2023-10-01T12:00:00.000Z", "2024-01-15T09:30:00Z"],
+        },
+      ],
     } satisfies JSONSchema7,
   }),
 )

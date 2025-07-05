@@ -65,7 +65,6 @@ describe("Effect Schema Converter - Error Handling & Edge Cases", () => {
         type: "array",
         items: { type: "string" },
         maxItems: 1,
-        description: "an array of at most 1 item(s)",
       })
     })
 
@@ -171,7 +170,8 @@ describe("Effect Schema Converter - Error Handling & Edge Cases", () => {
     test("should handle null/undefined annotation values", () => {
       const schema = S.String.annotations({
         title: undefined,
-        description: null as any,
+        // @ts-expect-error Testing null annotation value
+        description: null,
       })
       const result = convertEffectSchemaToOpenAPI(schema)
 
