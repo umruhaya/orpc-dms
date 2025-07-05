@@ -8,6 +8,7 @@ import type { DependencyContainer } from "tsyringe"
 import { resolveAuthFromContainer } from "@/infra/auth/better-auth"
 import config from "@/infra/config"
 import { router } from "../router"
+import { EffectSchemaConverter } from "./effect-schema-converter"
 
 const BASIC_AUTH_STR = `docs:${config.auth.DOCS_AUTH_PASS}`
 const BASIC_AUTH_STR_ENC = Buffer.from(BASIC_AUTH_STR, "ascii").toString(
@@ -28,6 +29,7 @@ const docsBasicAuth: MiddlewareHandler = async (c, next) => {
 
 const generator = new OpenAPIGenerator({
   // schemaConverters: [new ZodToJsonSchemaConverter()],
+  schemaConverters: [new EffectSchemaConverter()],
 })
 
 export const addOpenApiDocs = async (

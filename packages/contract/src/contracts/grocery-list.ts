@@ -11,6 +11,7 @@ import {
   ListSummarySchema,
   RecentListsParamsSchema,
 } from "../schemas/grocery-list"
+import { type } from "@orpc/contract"
 
 const groceryListBase = appAuthenticatedBase
 
@@ -21,7 +22,7 @@ export const getStats = groceryListBase
     summary: "Get grocery list statistics for dashboard",
     tags: ["grocery-list"],
   })
-  .input(S.standardSchemaV1(S.Void)) // No input required - using Effect Schema Void
+  .input(type<void>())
   .output(S.standardSchemaV1(ListStatsSchema))
 
 export const getRecentLists = groceryListBase
@@ -53,7 +54,6 @@ export const getListById = groceryListBase
   )
   .output(S.standardSchemaV1(ListSummarySchema))
 
-// CREATE: Use domain create schema for request body validation
 export const createGroceryList = groceryListBase
   .route({
     method: "POST",
@@ -61,10 +61,9 @@ export const createGroceryList = groceryListBase
     summary: "Create a new grocery list",
     tags: ["grocery-list"],
   })
-  .input(S.standardSchemaV1(GroceryListCreateSchema)) // Reuse domain creation schema
-  .output(S.standardSchemaV1(ListSummarySchema)) // Reuse domain summary schema
+  .input(S.standardSchemaV1(GroceryListCreateSchema))
+  .output(S.standardSchemaV1(ListSummarySchema))
 
-// UPDATE: Use domain update schema for request body validation
 export const updateGroceryList = groceryListBase
   .route({
     method: "PATCH",
@@ -77,15 +76,14 @@ export const updateGroceryList = groceryListBase
     S.standardSchemaV1(
       S.Struct({
         params: S.Struct({
-          id: GroceryListId, // Reuse domain ID schema
+          id: GroceryListId,
         }),
-        body: GroceryListUpdateSchema, // Reuse domain update schema
+        body: GroceryListUpdateSchema,
       }),
     ),
   )
   .output(S.standardSchemaV1(ListSummarySchema))
 
-// DELETE: Use domain ID schema for path parameter
 export const deleteGroceryList = groceryListBase
   .route({
     method: "DELETE",
@@ -98,12 +96,12 @@ export const deleteGroceryList = groceryListBase
     S.standardSchemaV1(
       S.Struct({
         params: S.Struct({
-          id: GroceryListId, // Reuse domain ID schema
+          id: GroceryListId,
         }),
       }),
     ),
   )
-  .output(S.standardSchemaV1(S.Void)) // No response body for successful deletion
+  .output(S.standardSchemaV1(S.Void))
 
 export const getGroceryListsWithFilters = groceryListBase
   .route({
@@ -117,7 +115,7 @@ export const getGroceryListsWithFilters = groceryListBase
       S.Struct({
         search: S.optional(S.String),
         status: S.optional(S.Literal("active", "inactive")),
-        pagination: RecentListsParamsSchema, // Reuse domain schema
+        pagination: RecentListsParamsSchema,
       }),
     ),
   )

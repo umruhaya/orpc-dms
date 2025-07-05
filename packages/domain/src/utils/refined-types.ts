@@ -38,6 +38,7 @@ const DateTimeBase = S.asSchema(
     identifier: "DateTime",
     message: (_issue) => "Invalid date/time format",
     jsonSchema: {
+      type: "number",
       format: "date-time",
       examples: [1696156800000, Date.now()],
     } satisfies JSONSchema7,

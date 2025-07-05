@@ -2,7 +2,7 @@ import { authenticated } from "../utils/orpc"
 
 const base = authenticated.groceryList
 
-const getListByIdHandler = base.getListById.handler(async ({ input }) => {
+const getListByIdHandler = base.getListById.handler(async () => {
   throw new Error("Not implemented yet")
 })
 

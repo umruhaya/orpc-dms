@@ -24,7 +24,6 @@
         "@orpc/zod": "catalog:",
         "@repo/contract": "workspace:*",
         "@repo/domain": "workspace:*",
-        "@scalar/openapi-types": "^0.3.4",
         "better-auth": "catalog:",
         "dotenv": "^16.6.1",
         "drizzle-orm": "^0.44.2",
@@ -39,6 +38,8 @@
       "devDependencies": {
         "@better-auth/cli": "^1.2.12",
         "@repo/typescript-config": "workspace:*",
+        "@scalar/openapi-types": "^0.3.4",
+        "@standard-schema/spec": "^1.0.0",
         "@types/bun": "catalog:",
         "@typescript/native-preview": "catalog:",
         "drizzle-kit": "^0.31.4",
