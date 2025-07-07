@@ -63,7 +63,6 @@ export const Route = createFileRoute("/_private")({
   component: PrivateLayout,
   beforeLoad: ({ context, location }) => {
     if (!context.user) {
-      console.warn("User not authenticated, redirecting to login")
       throw redirect({ to: "/auth/login", search: { redirect: location.href } })
     }
 

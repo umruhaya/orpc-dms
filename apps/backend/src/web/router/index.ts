@@ -1,4 +1,4 @@
-import { authenticated, contractRouter } from "../utils/orpc"
+import { authenticated } from "../utils/orpc"
 import groceryListRouter from "./grocery-list"
 import userRouter from "./user"
 

@@ -22,8 +22,6 @@ export const validationErrMap = (err: unknown) => {
   if (err.code === "BAD_REQUEST") {
     const zodErr = new ZodError(err.cause.issues as $ZodIssue[])
 
-    console.error("Validation error:", zodErr)
-
     throw new ORPCError("INPUT_VALIDATION_FAILED", {
       status: 422,
       cause: err.cause,

@@ -11,23 +11,35 @@ import { container } from "tsyringe"
 import { initAuthRouter } from "./router/auth"
 import config from "@/infra/config"
 import { addOpenApiDocs } from "./utils/openapidocs.handler"
-import { GroceryListAppService } from "@application/services/grocery-list.app-service"
 import { wireDi } from "@/infra/di"
 
 wireDi()
 
-const groceryListService = container.resolve(GroceryListAppService)
-
+// const groceryListService = container.resolve(GroceryListAppService)
 
 const app = new Hono()
 app.use(logger())
 app.use(
   "/*",
   cors({
-    origin: [config.app.TRUSTED_ORIGIN, "http://localhost:3000"],
-    allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    origin: [
+      config.app.TRUSTED_ORIGIN,
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
+    ],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Cookie",
+      "Set-Cookie",
+      "X-Requested-With",
+      "Accept",
+    ],
     credentials: true,
+    exposeHeaders: ["Set-Cookie"],
   }),
 )
 

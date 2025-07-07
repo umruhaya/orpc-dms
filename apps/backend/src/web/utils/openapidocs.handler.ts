@@ -36,8 +36,6 @@ export const addOpenApiDocs = async (
   app: Hono,
   container: DependencyContainer,
 ) => {
-  console.debug("Adding OpenAPI docs handler")
-
   const auth = resolveAuthFromContainer(container)
   const authSpecs = await auth.api.generateOpenAPISchema()
   const authTag = {

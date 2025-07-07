@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "bun build --target bun --outfile dist/server.js ./src/web/server.ts",
-    "dev": "bun run --hot src/web/server.ts",
+    "dev": "bun run --watch src/web/server.ts",
     "start": "node dist/server.js",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate --name",
@@ -16,11 +16,10 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@better-auth/cli": "^1.2.12",
     "@repo/typescript-config": "workspace:*",
-    "@scalar/openapi-types": "^0.3.4",
+    "@scalar/openapi-types": "^0.3.5",
     "@standard-schema/spec": "^1.0.0",
     "@types/bun": "catalog:",
     "@typescript/native-preview": "catalog:",
@@ -30,7 +29,7 @@
   },
   "dependencies": {
     "@carbonteq/fp": "catalog:",
-    "@orpc/openapi": "^1.6.4",
+    "@orpc/openapi": "^1.6.6",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "@repo/contract": "workspace:*",
@@ -41,7 +40,7 @@
     "effect": "^3.16.12",
     "env-var": "^7.5.0",
     "fast-jwt": "^6.0.2",
-    "hono": "^4.8.3",
+    "hono": "^4.8.4",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0",
     "zod": "catalog:"

@@ -15,6 +15,17 @@ export const UserSchema = defineEntityStruct({
 export type UserType = S.Schema.Type<typeof UserSchema>
 export type UserEncoded = S.Schema.Encoded<typeof UserSchema>
 
+export const NewUserSchema = UserSchema.pipe(
+  S.pick("email", "name"),
+  S.extend(
+    S.Struct({
+      password: S.String.pipe(S.minLength(6)),
+    }),
+  ),
+)
+export type NewUserType = S.Schema.Type<typeof NewUserSchema>
+export type NewUserEncoded = S.Schema.Encoded<typeof NewUserSchema>
+
 const bridge = createEncoderDecoderBridge(UserSchema)
 
 export class UserEntity extends BaseEntity implements UserType {

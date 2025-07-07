@@ -9,15 +9,11 @@ export const setOnSubmitErrorMap = <
   formApi: T,
 ) => {
   if (isInputValidationErr(err)) {
-    console.debug("Setting form error map", err.data)
-
     formApi.setErrorMap({
       onSubmit: {
         form: err.data.formErrors.join("\n"),
         fields: err.data.fieldErrors,
       },
     })
-  } else {
-    console.debug("Not a validation err apparaently", err)
   }
 }

@@ -1,7 +1,7 @@
 import { Result } from "@carbonteq/fp"
 import { UserEntity } from "@domain/entities/user.entity"
+import { UnauthorizedError } from "@domain/utils/base.errors"
 import type { ParseError } from "effect/ParseResult"
-import type { Context } from "hono"
 import { injectable } from "tsyringe"
 import { type AuthHandler, injectAuth } from "./better-auth"
 
@@ -21,11 +21,11 @@ export class AuthService {
 
   async getUser(
     headers: Headers,
-  ): Promise<Result<UserEntity, Error | ParseError>> {
+  ): Promise<Result<UserEntity, UnauthorizedError | ParseError>> {
     const session = await this.getSession(headers)
     if (!session?.user) {
       // TODO: unauthorized error
-      return Result.Err(new Error("No user session found"))
+      return Result.Err(new UnauthorizedError("User not authenticated"))
     }
 
     const user = UserEntity.fromEncoded({
@@ -34,18 +34,6 @@ export class AuthService {
     })
 
     return user
-  }
-
-  requireAuth() {
-    return async (c: Context, next: () => Promise<void>) => {
-      const user = c.get("user")
-
-      if (!user) {
-        return c.json({ error: "Authentication required" }, 401)
-      }
-
-      await next()
-    }
   }
 
   async signOut(headers: Record<string, string | undefined>) {

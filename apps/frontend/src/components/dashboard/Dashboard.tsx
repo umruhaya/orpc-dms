@@ -11,8 +11,8 @@ import {
   Text,
   Title,
 } from "@mantine/core"
-import { IconCheck, IconClock, IconList, IconPlus } from "@tabler/icons-react"
 import { Link } from "@tanstack/react-router"
+import { Check, Clock, List, Plus } from "lucide-react"
 import type { DashboardStats } from "../../utils/hooks/dashboard-hooks"
 
 interface DashboardProps {
@@ -43,7 +43,7 @@ const ListCard = ({ list }: ListCardProps) => {
 
       <Group justify="space-between">
         <Group gap="xs">
-          <IconClock size={16} />
+          <Clock size={16} />
           <Text size="xs" c="dimmed">
             Updated {new Date(list.updatedAt).toLocaleDateString()}
           </Text>
@@ -103,7 +103,7 @@ const EmptyState = () => {
   return (
     <Container size="sm" py="xl">
       <Stack align="center" gap="lg">
-        <IconList size={64} stroke={1.5} color="var(--mantine-color-gray-5)" />
+        <List size={64} strokeWidth={1.5} color="var(--mantine-color-gray-5)" />
         <Stack align="center" gap="xs">
           <Title order={3} ta="center">
             Welcome to Grocery Lists!
@@ -115,7 +115,7 @@ const EmptyState = () => {
         <Button
           component={Link}
           to="/lists/new"
-          leftSection={<IconPlus size={16} />}
+          leftSection={<Plus size={16} />}
           size="md"
         >
           Create Your First List
@@ -155,7 +155,7 @@ const Dashboard = ({ stats, userName, isLoading }: DashboardProps) => {
           <Button
             component={Link}
             to="/lists/new"
-            leftSection={<IconPlus size={16} />}
+            leftSection={<Plus size={16} />}
           >
             Create New List
           </Button>
@@ -169,26 +169,26 @@ const Dashboard = ({ stats, userName, isLoading }: DashboardProps) => {
           <StatCard
             title="Total Lists"
             value={stats.totalLists}
-            icon={<IconList size={24} />}
+            icon={<List size={24} />}
             color="blue"
           />
           <StatCard
             title="Recent Lists"
             value={stats.recentLists.length}
-            icon={<IconClock size={24} />}
+            icon={<Clock size={24} />}
             color="green"
           />
           {/* Placeholder stats for future features */}
           <StatCard
             title="Active Items"
             value="-"
-            icon={<IconCheck size={24} />}
+            icon={<Check size={24} />}
             color="orange"
           />
           <StatCard
             title="Completed Today"
             value="-"
-            icon={<IconCheck size={24} />}
+            icon={<Check size={24} />}
             color="teal"
           />
         </SimpleGrid>
@@ -228,7 +228,7 @@ const Dashboard = ({ stats, userName, isLoading }: DashboardProps) => {
             <Button
               component={Link}
               to="/lists/new"
-              leftSection={<IconPlus size={16} />}
+              leftSection={<Plus size={16} />}
               variant="light"
             >
               Create New List
@@ -236,7 +236,7 @@ const Dashboard = ({ stats, userName, isLoading }: DashboardProps) => {
             <Button
               component={Link}
               to="/lists"
-              leftSection={<IconList size={16} />}
+              leftSection={<List size={16} />}
               variant="light"
             >
               Browse All Lists

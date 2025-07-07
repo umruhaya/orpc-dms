@@ -21,7 +21,7 @@ export const handleAppResult = <T>(result: ApplicationResult<T>): T => {
       throw new ORPCError("FORBIDDEN", { message, status: 403 })
 
     case "InvalidData":
-      throw new ORPCError("BAD_REQUEST", { message, status: 400 })
+      throw new ORPCError("UNPROCESSABLE_CONTENT", { message, status: 422 })
 
     case "Conflict":
       throw new ORPCError("CONFLICT", { message, status: 409 })

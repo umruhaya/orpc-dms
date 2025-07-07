@@ -10,7 +10,7 @@ import AnchorLink from "../layout/AnchorLink"
 const formSchema = type({
   name: "string >= 1",
   email: "string.email",
-  password: "string >= 3",
+  password: "string >= 6",
 })
 
 type RegisterFormProps = {

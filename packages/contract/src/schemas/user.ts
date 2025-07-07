@@ -1,4 +1,7 @@
-import { UserSchema as DomainuserSchema } from "@domain/entities/user.entity"
+import {
+  NewUserSchema as DomainNewUserSchema,
+  UserSchema as DomainUserSchema,
+} from "@domain/entities/user.entity"
 import type { JSONSchema7 } from "json-schema"
 import { z } from "zod/v4"
 
@@ -27,7 +30,7 @@ export const UserSchema = z
   })
 export type User = z.infer<typeof UserSchema>
 
-const UUSerSchema = DomainuserSchema.annotations({
+export const UUSerSchema = DomainUserSchema.annotations({
   jsonSchema: {
     description: "User object representing a registered user in the system.",
     examples: [
@@ -38,6 +41,20 @@ const UUSerSchema = DomainuserSchema.annotations({
         emailVerified: false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+      },
+    ],
+  } satisfies JSONSchema7,
+})
+
+export const NNewUserSchema = DomainNewUserSchema.annotations({
+  jsonSchema: {
+    description:
+      "Schema for creating a new user, including name, email, and password.",
+    examples: [
+      {
+        name: "John Doe",
+        email: "john.doe@test.com",
+        password: "sometestpass-don't user it in prod",
       },
     ],
   } satisfies JSONSchema7,

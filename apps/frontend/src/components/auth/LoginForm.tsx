@@ -9,7 +9,7 @@ const formSchema = type({ email: "string.email", password: "string" })
 
 type LoginFormProps = {
   onLoginSuccess: () => Promise<void>
-  loginFn: () => Promise<void>
+  // loginFn: () => Promise<void>
 }
 
 const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
@@ -28,8 +28,6 @@ const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
           message: res.error.message,
           title: res.error.statusText,
         })
-
-        // Other onError stuff
       } else {
         toast.success({ message: "Login successful" })
         await onLoginSuccess()

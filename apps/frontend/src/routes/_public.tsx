@@ -14,9 +14,7 @@ const PublicLayout = () => {
 export const Route = createFileRoute("/_public")({
   component: PublicLayout,
   beforeLoad: ({ context }) => {
-    console.debug("Public route context", context.user)
     if (context.user) {
-      console.warn("User is already authenticated, redirecting to home page.")
       throw redirect({ to: "/" })
     }
 

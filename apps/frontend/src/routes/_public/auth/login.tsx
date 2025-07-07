@@ -10,9 +10,9 @@ const LoginPage = () => {
 
   const onLoginSuccess = useCallback(async () => {
     if (redirectedTo) {
-      navigateTo({ to: redirectedTo, from: Route.path })
+      navigateTo({ to: redirectedTo, replace: true })
     } else {
-      navigateTo({ to: "/", from: Route.path })
+      navigateTo({ to: "/", replace: true })
     }
   }, [navigateTo, redirectedTo])
 

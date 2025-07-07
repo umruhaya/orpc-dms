@@ -11,7 +11,7 @@ export type ContractClient = AppRouterClient
 // https://orpc.unnoq.com/docs/integrations/tanstack-query
 
 const baseRpcLinkOpts: RPCLinkOptions<ClientContext> = {
-  url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
+  url: import.meta.env.DEV ? "/api/rpc" : `${import.meta.env.VITE_SERVER_URL}/rpc`,
 }
 
 const getClientLink = createIsomorphicFn()
