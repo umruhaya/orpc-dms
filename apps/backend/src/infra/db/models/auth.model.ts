@@ -1,9 +1,11 @@
-import type { UUIDType } from "@domain/utils/refined-types"
+import type { UserType } from "@domain/entities/user.entity"
 import { boolean, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
-import { baseColumns, primaryKeyCol } from "../db.utils"
+import { getBaseColumns, getPrimaryKeyCol } from "../db.utils"
+
+type UserId = UserType["id"]
 
 export const user = pgTable("user", {
-  ...baseColumns,
+  ...getBaseColumns<UserId>(),
 
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -12,25 +14,25 @@ export const user = pgTable("user", {
 })
 
 export const session = pgTable("session", {
-  ...baseColumns,
+  ...getBaseColumns(),
 
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   userId: uuid("user_id")
-    .$type<UUIDType>()
+    .$type<UserId>()
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
 })
 
 export const account = pgTable("account", {
-  ...baseColumns,
+  ...getBaseColumns(),
 
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
   userId: uuid("user_id")
-    .$type<UUIDType>()
+    .$type<UserId>()
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   accessToken: text("access_token"),
@@ -43,7 +45,7 @@ export const account = pgTable("account", {
 })
 
 export const verification = pgTable("verification", {
-  id: primaryKeyCol,
+  id: getPrimaryKeyCol(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
   expiresAt: timestamp("expires_at").notNull(),

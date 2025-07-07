@@ -1,7 +1,7 @@
 import { Option } from "@carbonteq/fp"
 import { DateTime as DT, ParseResult, Schema as S } from "effect"
 import type { JSONSchema7 } from "json-schema"
-import { addMethodsToSchema } from "./schema-utils"
+import { addMethodsToSchema, createEncoderDecoderBridge } from "./schema-utils"
 
 export const UUIDBase = S.asSchema(
   S.UUID.pipe(S.brand("UUID")).annotations({
@@ -62,6 +62,7 @@ export type DateTimeEncoded = S.Schema.Encoded<typeof DateTimeBase>
 
 export const DateTime = addMethodsToSchema(DateTimeBase, {
   now: () => DT.unsafeNow(),
+  bridge: createEncoderDecoderBridge(DateTimeBase),
 })
 
 export const Opt = <Inner, Outer, R>(

@@ -2,14 +2,19 @@ import { parseErrorsToValidationError } from "@application/utils/validation-erro
 import { Result } from "@carbonteq/fp"
 import {
   type GroceryListEncoded,
-  type GroceryListRepository,
+  GroceryListRepository,
   ResultUtils,
   type UserEntity,
   type ValidationError,
 } from "@repo/domain"
+import { inject, injectable } from "tsyringe"
 
+@injectable()
 export class GroceryListAppService {
-  constructor(private readonly groceryListRepo: GroceryListRepository) {}
+  constructor(
+    @inject(GroceryListRepository)
+    private readonly groceryListRepo: GroceryListRepository,
+  ) {}
 
   async findGroceryListsForUser(
     user: UserEntity,

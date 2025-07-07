@@ -11,6 +11,13 @@ import { container } from "tsyringe"
 import { initAuthRouter } from "./router/auth"
 import config from "@/infra/config"
 import { addOpenApiDocs } from "./utils/openapidocs.handler"
+import { GroceryListAppService } from "@application/services/grocery-list.app-service"
+import { wireDi } from "@/infra/di"
+
+wireDi()
+
+const groceryListService = container.resolve(GroceryListAppService)
+
 
 const app = new Hono()
 app.use(logger())
