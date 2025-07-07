@@ -1,6 +1,5 @@
 import type { UUIDType } from "@domain/utils/refined-types"
-import { timestamp } from "drizzle-orm/gel-core"
-import { uuid } from "drizzle-orm/pg-core"
+import { timestamp, uuid } from "drizzle-orm/pg-core"
 
 // simple branded type occurs only at the type level
 export const getPrimaryKeyCol = <T extends UUIDType = UUIDType>() =>
