@@ -71,7 +71,7 @@ export class GroceryListEntity extends BaseEntity implements GroceryListType {
   }
 
   static fromEncoded(data: GroceryListEncoded) {
-    return bridge.deserialize(data)
+    return bridge.deserialize(data).map((d) => new GroceryListEntity(d))
   }
 
   isOwner(userId: string): boolean {

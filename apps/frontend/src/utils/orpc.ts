@@ -19,6 +19,12 @@ const getClientLink = createIsomorphicFn()
     () =>
       new RPCLink({
         ...baseRpcLinkOpts,
+        fetch(request, init) {
+          return globalThis.fetch(request, {
+            ...init,
+            credentials: "include",
+          })
+        },
       }),
   )
   .server(
@@ -39,7 +45,7 @@ const getClientLink = createIsomorphicFn()
 // })
 
 const link = getClientLink()
-export const orpcClient: AppRouterClient = createORPCClient(link)
+const orpcClient: AppRouterClient = createORPCClient(link)
 
 export type OrpcReactQuery = RouterUtils<ContractClient>
 export const orpc = createORPCReactQueryUtils(orpcClient)

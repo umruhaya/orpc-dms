@@ -20,9 +20,9 @@ const Home = () => {
 
   return (
     <Dashboard
+      isLoading={isLoading}
       stats={dashboardData}
       userName={user.name}
-      isLoading={isLoading}
     />
   )
 }

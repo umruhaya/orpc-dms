@@ -103,17 +103,12 @@ type InnerResult<T> = Result<T, AppError>
 
 export type EmptyResult = typeof ApplicationResult.EMPTY
 
-// ApplicationResult - wrapper around Result<T, AppError>
 export class ApplicationResult<T> {
-  readonly _isOk: boolean
-
   static readonly EMPTY: ApplicationResult<UNIT> = new ApplicationResult(
     Result.UNIT_RESULT,
   )
 
-  private constructor(private readonly inner_result: InnerResult<T>) {
-    this._isOk = inner_result.isOk()
-  }
+  private constructor(private readonly inner_result: InnerResult<T>) {}
 
   isOk(): boolean {
     return this.inner_result.isOk()
@@ -168,8 +163,6 @@ export class ApplicationResult<T> {
     return this.inner_result.safeUnwrap()
   }
 
-  // Note: zip and flatZip methods may return Promises in some cases
-  // For now, commenting out to avoid type issues
   // zip<U>(fn: (r: T) => U): ApplicationResult<[T, U]> {
   //   return new ApplicationResult(this.inner_result.zip(fn))
   // }

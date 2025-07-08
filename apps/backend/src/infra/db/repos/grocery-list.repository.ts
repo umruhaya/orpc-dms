@@ -1,5 +1,4 @@
-import type { Result, UnitResult } from "@carbonteq/fp"
-import { Result as R } from "@carbonteq/fp"
+import { Result as R, type Result } from "@carbonteq/fp"
 import type {
   GroceryListEntity,
   GroceryListType,
@@ -9,8 +8,10 @@ import { GroceryListEntity as GList } from "@domain/entities/grocery-list.entity
 import type { UserType } from "@domain/entities/user.entity"
 import { GroceryListNotFoundError } from "@domain/errors/grocery-list.errors"
 import { GroceryListRepository } from "@domain/repositories/grocery-list.repository"
+import type { RepoResult, RepoUnitResult } from "@domain/utils"
 import { DateTime } from "@domain/utils/refined-types"
 import { desc, eq } from "drizzle-orm"
+import type { ParseError } from "effect/ParseResult"
 import { injectable } from "tsyringe"
 import type { AppDatabase } from "../conn"
 import { InjectDb } from "../conn"
@@ -24,15 +25,14 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
 
   async create(
     list: GroceryListEntity,
-  ): Promise<Result<GroceryListEntity, Error>> {
+  ): Promise<RepoResult<GroceryListEntity, Error>> {
     try {
+      const encoded = list.serialize().unwrap()
+
       const values = {
-        name: list.name,
-        description: list.description,
+        ...encoded,
+        id: list.id,
         userId: list.ownerId,
-        createdAt: list.createdAt,
-        updatedAt: list.updatedAt,
-        isActive: true,
       } satisfies typeof groceryLists.$inferInsert
 
       const [inserted] = await this.db
@@ -44,7 +44,7 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
         return R.Err(new Error("Failed to create grocery list"))
       }
 
-      return R.Ok(this.mapToEntity(inserted))
+      return this.mapToEntity(inserted)
     } catch (error) {
       return R.Err(error as Error)
     }
@@ -52,7 +52,7 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
 
   async findById(
     id: GroceryListType["id"],
-  ): Promise<Result<GroceryListEntity, GroceryListNotFoundError>> {
+  ): Promise<RepoResult<GroceryListEntity, GroceryListNotFoundError>> {
     try {
       const result = await this.db
         .select()
@@ -65,7 +65,7 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
         return R.Err(new GroceryListNotFoundError(id))
       }
 
-      return R.Ok(this.mapToEntity(row))
+      return this.mapToEntity(row)
     } catch {
       return R.Err(new GroceryListNotFoundError(id))
     }
@@ -86,7 +86,7 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
 
   async delete(
     id: GroceryListType["id"],
-  ): Promise<UnitResult<GroceryListNotFoundError>> {
+  ): Promise<RepoUnitResult<GroceryListNotFoundError>> {
     try {
       const result = await this.db
         .update(groceryLists)
@@ -101,26 +101,31 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
         return R.Err(new GroceryListNotFoundError(id))
       }
 
+      // @ts-expect-error need to update UnitResult implementation
       return R.UNIT_RESULT
     } catch {
       return R.Err(new GroceryListNotFoundError(id))
     }
   }
 
-  async findByUserId(userId: UserType["id"]): Promise<GroceryListEntity[]> {
+  async findByUserId(
+    userId: UserType["id"],
+  ): Promise<RepoResult<GroceryListEntity[], ParseError[]>> {
     const results = await this.db
       .select()
       .from(groceryLists)
       .where(eq(groceryLists.userId, userId))
       .orderBy(desc(groceryLists.updatedAt))
 
-    return results.map((row) => this.mapToEntity(row))
+    const lists = results.map((row) => this.mapToEntity(row))
+
+    return R.all(...lists)
   }
 
   private mapToEntity(
     row: typeof groceryLists.$inferSelect,
-  ): GroceryListEntity {
-    return GList.from({
+  ): Result<GroceryListEntity, ParseError> {
+    return GList.fromEncoded({
       id: row.id,
       name: row.name,
       description: row.description,

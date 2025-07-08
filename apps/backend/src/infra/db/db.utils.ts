@@ -1,4 +1,4 @@
-import type { UUIDType } from "@domain/utils/refined-types"
+import type { DateTimeEncoded, UUIDType } from "@domain/utils/refined-types"
 import { timestamp, uuid } from "drizzle-orm/pg-core"
 
 // simple branded type occurs only at the type level
@@ -27,8 +27,14 @@ export const getPrimaryKeyCol = <T extends UUIDType = UUIDType>() =>
 
 export const getBaseColumns = <T extends UUIDType = UUIDType>() => ({
   id: getPrimaryKeyCol<T>(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at")
+    .$type<DateTimeEncoded>()
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .$type<DateTimeEncoded>()
+    .notNull()
+    .defaultNow(),
   // createdAt: dateTimeColWithDefault("created_at").notNull(),
   // updatedAt: dateTimeColWithDefault("updated_at").notNull(),
 })

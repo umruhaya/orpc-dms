@@ -15,8 +15,6 @@ import { wireDi } from "@/infra/di"
 
 wireDi()
 
-// const groceryListService = container.resolve(GroceryListAppService)
-
 const app = new Hono()
 app.use(logger())
 app.use(

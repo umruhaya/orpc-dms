@@ -13,21 +13,20 @@ import {
 } from "@mantine/core"
 import { Link } from "@tanstack/react-router"
 import { Check, Clock, List, Plus } from "lucide-react"
-import type { DashboardStats } from "../../utils/hooks/dashboard-hooks"
 
-interface DashboardProps {
-  stats: DashboardStats
-  userName: string
-  isLoading?: boolean
-}
+// interface DashboardProps {
+//   stats: DashboardStats
+//   userName: string
+//   isLoading?: boolean
+// }
 
-interface ListCardProps {
-  list: DashboardStats["recentLists"][0]
-}
+// interface ListCardProps {
+//   list: DashboardStats["recentLists"][0]
+// }
 
 const ListCard = ({ list }: ListCardProps) => {
   return (
-    <Card shadow="sm" padding="md" radius="md" withBorder>
+    <Card padding="md" radius="md" shadow="sm" withBorder>
       <Group justify="space-between" mb="xs">
         <Text fw={500} size="lg" truncate>
           {list.name}
@@ -37,25 +36,20 @@ const ListCard = ({ list }: ListCardProps) => {
         </Badge>
       </Group>
 
-      <Text size="sm" c="dimmed" mb="md" lineClamp={2}>
+      <Text c="dimmed" lineClamp={2} mb="md" size="sm">
         {list.description || "No description"}
       </Text>
 
       <Group justify="space-between">
         <Group gap="xs">
           <Clock size={16} />
-          <Text size="xs" c="dimmed">
+          <Text c="dimmed" size="xs">
             Updated {new Date(list.updatedAt).toLocaleDateString()}
           </Text>
         </Group>
 
         <Group gap="xs">
-          <Button
-            component={Link}
-            to="/lists"
-            variant="light"
-            size="xs"
-          >
+          <Button component={Link} size="xs" to="/lists" variant="light">
             View
           </Button>
         </Group>
@@ -68,7 +62,7 @@ const StatCard = ({
   title,
   value,
   icon,
-  color = "blue"
+  color = "blue",
 }: {
   title: string
   value: string | number
@@ -76,22 +70,17 @@ const StatCard = ({
   color?: string
 }) => {
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
+    <Card padding="lg" radius="md" shadow="sm" withBorder>
       <Group justify="space-between">
         <Box>
-          <Text c="dimmed" size="sm" tt="uppercase" fw={700}>
+          <Text c="dimmed" fw={700} size="sm" tt="uppercase">
             {title}
           </Text>
           <Text fw={700} size="xl">
             {value}
           </Text>
         </Box>
-        <ActionIcon
-          color={color}
-          size="xl"
-          radius="md"
-          variant="light"
-        >
+        <ActionIcon color={color} radius="md" size="xl" variant="light">
           {icon}
         </ActionIcon>
       </Group>
@@ -101,22 +90,23 @@ const StatCard = ({
 
 const EmptyState = () => {
   return (
-    <Container size="sm" py="xl">
+    <Container py="xl" size="sm">
       <Stack align="center" gap="lg">
-        <List size={64} strokeWidth={1.5} color="var(--mantine-color-gray-5)" />
+        <List color="var(--mantine-color-gray-5)" size={64} strokeWidth={1.5} />
         <Stack align="center" gap="xs">
           <Title order={3} ta="center">
             Welcome to Grocery Lists!
           </Title>
           <Text c="dimmed" ta="center">
-            Create your first grocery list to get started with organizing your shopping.
+            Create your first grocery list to get started with organizing your
+            shopping.
           </Text>
         </Stack>
         <Button
           component={Link}
-          to="/lists/new"
           leftSection={<Plus size={16} />}
           size="md"
+          to="/lists/new"
         >
           Create Your First List
         </Button>
@@ -145,7 +135,7 @@ const Dashboard = ({ stats, userName, isLoading }: DashboardProps) => {
     <Container fluid p="md">
       <Stack gap="lg">
         {/* Header */}
-        <Group justify="space-between" align="flex-start">
+        <Group align="flex-start" justify="space-between">
           <Box>
             <Title order={2}>Welcome back, {userName}! 👋</Title>
             <Text c="dimmed" size="lg">
@@ -154,42 +144,39 @@ const Dashboard = ({ stats, userName, isLoading }: DashboardProps) => {
           </Box>
           <Button
             component={Link}
-            to="/lists/new"
             leftSection={<Plus size={16} />}
+            to="/lists/new"
           >
             Create New List
           </Button>
         </Group>
 
         {/* Stats Cards */}
-        <SimpleGrid
-          cols={{ base: 1, sm: 2, md: 4 }}
-          spacing="lg"
-        >
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="lg">
           <StatCard
+            color="blue"
+            icon={<List size={24} />}
             title="Total Lists"
             value={stats.totalLists}
-            icon={<List size={24} />}
-            color="blue"
           />
           <StatCard
+            color="green"
+            icon={<Clock size={24} />}
             title="Recent Lists"
             value={stats.recentLists.length}
-            icon={<Clock size={24} />}
-            color="green"
           />
           {/* Placeholder stats for future features */}
           <StatCard
+            color="orange"
+            icon={<Check size={24} />}
             title="Active Items"
             value="-"
-            icon={<Check size={24} />}
-            color="orange"
           />
           <StatCard
+            color="teal"
+            icon={<Check size={24} />}
             title="Completed Today"
             value="-"
-            icon={<Check size={24} />}
-            color="teal"
           />
         </SimpleGrid>
 
@@ -198,20 +185,12 @@ const Dashboard = ({ stats, userName, isLoading }: DashboardProps) => {
           <Box>
             <Group justify="space-between" mb="md">
               <Title order={3}>Recent Lists</Title>
-              <Button
-                component={Link}
-                to="/lists"
-                variant="subtle"
-                size="sm"
-              >
+              <Button component={Link} size="sm" to="/lists" variant="subtle">
                 View All Lists
               </Button>
             </Group>
 
-            <SimpleGrid
-              cols={{ base: 1, sm: 2, lg: 3 }}
-              spacing="md"
-            >
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
               {stats.recentLists.map((list) => (
                 <ListCard key={list.id} list={list} />
               ))}
@@ -220,23 +199,23 @@ const Dashboard = ({ stats, userName, isLoading }: DashboardProps) => {
         )}
 
         {/* Quick Actions */}
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
+        <Card padding="lg" radius="md" shadow="sm" withBorder>
           <Group justify="space-between" mb="md">
             <Title order={4}>Quick Actions</Title>
           </Group>
           <Group>
             <Button
               component={Link}
-              to="/lists/new"
               leftSection={<Plus size={16} />}
+              to="/lists/new"
               variant="light"
             >
               Create New List
             </Button>
             <Button
               component={Link}
-              to="/lists"
               leftSection={<List size={16} />}
+              to="/lists"
               variant="light"
             >
               Browse All Lists

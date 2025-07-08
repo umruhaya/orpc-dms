@@ -1,29 +1,22 @@
-import type { CreateGroceryListDto } from "@application/dtos/grocery-list.dto"
+// biome-ignore lint/style/useImportType: Dependency injection
 import { GroceryListAppService } from "@application/services/grocery-list.app-service"
+import type { CreateGroceryListDto } from "@application/dtos/grocery-list.dto"
 import { ApplicationResult } from "@application/utils/application-result.utils"
-import type {
-  GroceryListEncoded,
-  GroceryListRepository,
-  ItemRepository,
-  UserEntity,
-  UserRepository,
+import {
+  ResultUtils,
+  type GroceryListEncoded,
+  type UserEntity,
 } from "@repo/domain"
+import { autoInjectable } from "tsyringe"
 
-export interface DashboardStats {
+export type DashboardStats = {
   totalLists: number
   recentLists: GroceryListEncoded[]
 }
 
-export class GroceryListWorkflow {
-  private readonly groceryListService: GroceryListAppService
-
-  constructor(
-    private readonly groceryListRepo: GroceryListRepository,
-    private readonly userRepo: UserRepository,
-    private readonly itemRepo: ItemRepository,
-  ) {
-    this.groceryListService = new GroceryListAppService(groceryListRepo)
-  }
+@autoInjectable()
+export class GroceryListWorkflows {
+  constructor(private readonly groceryListService: GroceryListAppService) {}
 
   async createGroceryList(
     _dto: CreateGroceryListDto,
@@ -42,27 +35,14 @@ export class GroceryListWorkflow {
     const listsResult =
       await this.groceryListService.findGroceryListsForUser(user)
 
-    if (listsResult.isErr()) {
-      return ApplicationResult.fromResult(listsResult)
-    }
+    const stats = listsResult
+      .map(({ lists }) => lists.slice(0, 4))
+      .map((recentLists) => ({
+        recentLists,
+        totalLists: recentLists.length,
+      }))
 
-    const { lists } = listsResult.unwrap()
-
-    // Sort by updatedAt and get recent lists (HTTP layer orchestration)
-    const recentLists = lists
-      .sort((a, b) => {
-        const aTime = a.updatedAt.toString()
-        const bTime = b.updatedAt.toString()
-        return bTime.localeCompare(aTime)
-      })
-      .slice(0, 4)
-
-    const stats: DashboardStats = {
-      totalLists: lists.length,
-      recentLists,
-    }
-
-    return ApplicationResult.Ok(stats)
+    return ApplicationResult.fromResult(stats)
   }
 
   async updateGroceryList(

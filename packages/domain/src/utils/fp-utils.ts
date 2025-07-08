@@ -143,4 +143,12 @@ export const ResultUtils = {
       const results = items.map(fn)
       return ResultUtils.collect(results)
     },
+
+  log: <T, E>(result: Result<T, E>, prefix: string = "") => {
+    if (result.isOk()) {
+      console.log(`${prefix} Success:`, result.unwrap())
+    } else {
+      console.error(`${prefix} Error:`, result.unwrapErr())
+    }
+  },
 } as const

@@ -6,9 +6,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "files": [
-    "src"
-  ],
+  "files": ["src"],
   "exports": {
     ".": {
       "import": "./src/index.ts",
@@ -37,6 +35,7 @@
   "dependencies": {
     "@orpc/contract": "catalog:",
     "@orpc/zod": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "effect": "catalog:"
   }
 }

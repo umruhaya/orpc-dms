@@ -7,7 +7,7 @@ import {
 } from "@domain/entities/grocery-list.entity"
 import { Schema as S } from "effect"
 import {
-  ListStatsSchema,
+  DashboardStatsSchema,
   ListSummarySchema,
   RecentListsParamsSchema,
 } from "../schemas/grocery-list"
@@ -23,7 +23,7 @@ export const getStats = groceryListBase
     tags: ["grocery-list"],
   })
   .input(type<void>())
-  .output(S.standardSchemaV1(ListStatsSchema))
+  .output(S.standardSchemaV1(DashboardStatsSchema))
 
 export const getRecentLists = groceryListBase
   .route({
@@ -33,7 +33,7 @@ export const getRecentLists = groceryListBase
     tags: ["grocery-list"],
   })
   .input(S.standardSchemaV1(RecentListsParamsSchema))
-  .output(S.standardSchemaV1(S.Array(ListSummarySchema)))
+  .output(S.standardSchemaV1(ListSummarySchema))
 
 export const getListById = groceryListBase
   .route({

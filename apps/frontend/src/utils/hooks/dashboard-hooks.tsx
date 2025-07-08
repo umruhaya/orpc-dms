@@ -1,39 +1,46 @@
 import { useQuery } from "@tanstack/react-query"
+import { orpc } from "../orpc"
 
-export interface DashboardStats {
-  totalLists: number
-  recentLists: Array<{
-    id: string
-    name: string
-    description: string
-    updatedAt: string
-  }>
+export const useDashboardStats = () => {
+  const opts = orpc.authenticated.groceryList.getStats.queryOptions()
+
+  return useQuery(opts)
+}
+
+export const useRecentLists = () => {
+  const opts = orpc.authenticated.groceryList.getRecentLists.queryOptions({
+    input: { page: 1, limit: 5 },
+    select: (data) =>
+      data.lists.map((list) => ({
+        id: list.id,
+        name: list.name,
+        description: list.description,
+        updatedAt: list.updatedAt.toString(),
+      })),
+  })
+
+  return useQuery(opts)
 }
 
 export const useDashboard = () => {
-  const {
-    data: dashboardData,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: async (): Promise<DashboardStats> => {
-      // This will need to be implemented once the backend route is created
-      // For now, return mock data
-      return {
-        totalLists: 0,
-        recentLists: [],
-      }
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: 1,
-  })
+  const statsQuery = useDashboardStats()
+  const recentListsQuery = useRecentLists()
+
+  const dashboardData =
+    statsQuery.data && recentListsQuery.data
+      ? {
+          totalLists: statsQuery.data.totalLists,
+          recentLists: recentListsQuery.data,
+        }
+      : null
 
   return {
     dashboardData,
-    isLoading,
-    error,
-    refetch,
+    isLoading: statsQuery.isLoading || recentListsQuery.isLoading,
+    error: statsQuery.error || recentListsQuery.error,
+    refetch: () => {
+      statsQuery.refetch()
+      recentListsQuery.refetch()
+    },
   }
 }

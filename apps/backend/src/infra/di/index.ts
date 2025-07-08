@@ -1,8 +1,10 @@
 import { GroceryListAppService } from "@application/services"
+import { GroceryListWorkflows } from "@application/workflows"
 import { container } from "tsyringe"
 import { registerRepositories } from "../db/repos/di"
 
 const services = [GroceryListAppService] as const
+const workflows = [GroceryListWorkflows] as const
 
 export const wireDi = () => {
   registerRepositories()
@@ -10,5 +12,9 @@ export const wireDi = () => {
   // register application services
   for (const service of services) {
     container.registerSingleton(service, service)
+  }
+
+  for (const workflow of workflows) {
+    container.registerSingleton(workflow, workflow)
   }
 }

@@ -1,4 +1,4 @@
 export {
   type DashboardStats,
-  GroceryListWorkflow,
+  GroceryListWorkflows,
 } from "./grocery-list.workflow"
