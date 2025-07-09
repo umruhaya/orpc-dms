@@ -1,3 +1,4 @@
+import LinkBtn from "@app/components/layout/LinkBtn"
 import { Button, Card, Group, Title } from "@mantine/core"
 import { Link } from "@tanstack/react-router"
 import { List, Plus } from "lucide-react"
@@ -9,22 +10,22 @@ export const QuickActions = () => {
         <Title order={4}>Quick Actions</Title>
       </Group>
       <Group>
-        <Button
-          component={Link}
+        <LinkBtn
           leftSection={<Plus size={16} />}
+          preload="intent"
           to="/lists/new"
           variant="light"
         >
           Create New List
-        </Button>
-        <Button
-          component={Link}
-          leftSection={<List size={16} />}
+        </LinkBtn>
+        <LinkBtn
+          leftSection={<Plus size={16} />}
+          preload="intent"
           to="/lists"
           variant="light"
         >
           Browse All Lists
-        </Button>
+        </LinkBtn>
       </Group>
     </Card>
   )

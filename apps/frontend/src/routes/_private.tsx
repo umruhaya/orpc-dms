@@ -1,5 +1,5 @@
 import LogoutBtn from "@app/components/auth/LogoutBtn"
-import AnchorLink from "@app/components/layout/AnchorLink"
+import NavigationLink from "@app/components/layout/NavigationLink"
 import { AppShell, Box, Group, NavLink, Stack, Text } from "@mantine/core"
 import {
   createFileRoute,
@@ -33,61 +33,53 @@ const PrivateLayout = () => {
 
       <AppShell.Navbar p="md">
         <Stack dir="column" gap="md" style={{ height: "100%" }}>
-          {/* Navigation Links */}
           <Box style={{ flex: 1 }}>
             <Stack gap="xs">
-              <Text c="dimmed" fw="bold" mb="xs" size="xs">
-                NAVIGATION
+              <Text c="dimmed" fw="bold" mb="xs" size="xs" tt="uppercase">
+                Navigation
               </Text>
-              <NavLink
-                component={AnchorLink}
+
+              <NavigationLink
                 label="Dashboard"
                 leftSection={<Home size={16} />}
-                styles={{
-                  root: { textDecoration: "none" },
-                  label: { textDecoration: "none" },
-                }}
                 to="/"
               />
-              <NavLink
-                component={AnchorLink}
+              <NavigationLink
                 label="All Lists"
                 leftSection={<List size={16} />}
-                styles={{
-                  root: { textDecoration: "none" },
-                  label: { textDecoration: "none" },
-                }}
                 to="/lists"
               />
-              <NavLink
-                component={AnchorLink}
+              <NavigationLink
                 label="Create List"
                 leftSection={<Plus size={16} />}
-                styles={{
-                  root: { textDecoration: "none" },
-                  label: { textDecoration: "none" },
-                }}
                 to="/lists/new"
               />
-              <Text c="dimmed" fw="bold" mb="xs" mt="md" size="xs">
-                COMING SOON
+
+              <Text
+                c="dimmed"
+                fw="bold"
+                mb="xs"
+                mt="md"
+                size="xs"
+                tt="uppercase"
+              >
+                To Add
               </Text>
-              <NavLink
+              <NavigationLink
                 disabled
                 label="List Collaborators"
                 leftSection={<UserPlus size={16} />}
-                style={{ opacity: 0.5 }}
+                to="/collaborators"
               />
-              <NavLink
+              <NavigationLink
                 disabled
                 label="Profile"
                 leftSection={<User size={16} />}
-                style={{ opacity: 0.5 }}
+                to="/profile"
               />
             </Stack>
           </Box>
 
-          {/* Logout Section - Fixed at bottom */}
           <Box
             mt="auto"
             pt="md"
