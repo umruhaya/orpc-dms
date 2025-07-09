@@ -39,10 +39,9 @@ export class GroceryListAppService {
     const startOfToday = new Date()
     startOfToday.setHours(0, 0, 0, 0)
 
-    const [totalLists, recentLists, activeItems, completedToday] =
+    const [totalLists, recentLists, pendingItems, completedToday] =
       await Promise.all([
         this.groceryListRepo.count({ userId: user.id }),
-        // Promise.resolve(0),
         this.groceryListRepo.count({ userId: user.id, since: sevenDaysAgo }),
         this.itemRepo.count({ userId: user.id, status: "pending" }),
         this.itemRepo.count({
@@ -55,7 +54,7 @@ export class GroceryListAppService {
     const stats: DashboardStats = {
       totalLists,
       recentLists,
-      activeItems,
+      pendingItems,
       completedToday,
     }
 

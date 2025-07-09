@@ -65,8 +65,8 @@ export const DashboardStats = ({ stats }: DashboardStatsProps) => {
         <StatCard
           color="orange"
           icon={<Plus size={24} />}
-          title="Active Items"
-          value={stats.activeItems}
+          title="Pending Items"
+          value={stats.pendingItems}
         />
         <StatCard
           color="teal"

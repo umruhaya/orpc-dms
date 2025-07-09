@@ -13,7 +13,7 @@ export const ListSummarySchema = S.Struct({
 export const DashboardStatsSchema = S.Struct({
   totalLists: S.Number,
   recentLists: S.Number,
-  activeItems: S.Number,
+  pendingItems: S.Number,
   completedToday: S.Number,
 })
 
