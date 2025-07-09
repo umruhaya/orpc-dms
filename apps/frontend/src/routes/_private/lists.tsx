@@ -1,6 +1,5 @@
-import type { GroceryList } from "@contract/schemas/grocery-list"
-import { orpc } from "@app/utils/orpc"
 import { ListCard } from "@app/components/shared/ListCard"
+import type { GroceryList } from "@contract/schemas/grocery-list"
 import {
   Button,
   Container,
@@ -15,24 +14,20 @@ import {
 } from "@mantine/core"
 import { useDebouncedValue } from "@mantine/hooks"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
 import { Plus, Search } from "lucide-react"
 import { useState } from "react"
+import { listsQueryOptions, useLists } from "../../utils/hooks/lists-hooks"
 
 const GroceryListsPage = () => {
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState<"active" | "inactive" | "">("")
   const [debouncedSearch] = useDebouncedValue(search, 300)
 
-  const { data, isLoading, error } = useQuery({
-    ...orpc.authenticated.groceryList.getLists.queryOptions({
-      input: {
-        limit: 50,
-        page: 1,
-        search: debouncedSearch || undefined,
-        status: status || undefined,
-      },
-    }),
+  const { data, isLoading, error } = useLists({
+    limit: 50,
+    page: 1,
+    search: debouncedSearch || undefined, // undefined part is important for the query cache from server to be maintained on component mount
+    status: status || undefined,
   })
 
   const lists = data?.items || []
@@ -51,30 +46,28 @@ const GroceryListsPage = () => {
           </Button>
         </Group>
 
-        {/* Filters */}
         <Group gap="md">
           <TextInput
-            placeholder="Search lists..."
             leftSection={<Search size={16} />}
-            value={search}
             onChange={(e) => setSearch(e.currentTarget.value)}
+            placeholder="Search lists..."
             style={{ flex: 1, maxWidth: 300 }}
+            value={search}
           />
           <Select
-            placeholder="Filter by status"
+            clearable
             data={[
               { value: "", label: "All" },
               { value: "active", label: "Active" },
               { value: "inactive", label: "Inactive" },
             ]}
-            value={status}
             onChange={(value) => setStatus(value as "active" | "inactive" | "")}
-            clearable
+            placeholder="Filter by status"
             style={{ minWidth: 150 }}
+            value={status}
           />
         </Group>
 
-        {/* Content */}
         {isLoading ? (
           <Group justify="center" p="xl">
             <Loader />
@@ -120,4 +113,14 @@ const GroceryListsPage = () => {
 export const Route = createFileRoute("/_private/lists")({
   component: GroceryListsPage,
   head: () => ({ meta: [{ title: "All Lists" }] }),
+  loader: async ({ context }) => {
+    const { queryClient, orpc } = context
+
+    await queryClient.ensureQueryData(
+      listsQueryOptions(orpc, {
+        limit: 50,
+        page: 1,
+      }),
+    )
+  },
 })

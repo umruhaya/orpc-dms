@@ -1,5 +1,4 @@
 import { GroceryListSchema } from "@domain/entities/grocery-list.entity";
-import { DateTime } from "@domain/utils";
 import {
   PaginatedResultSchema,
   PaginationParamsSchema,
