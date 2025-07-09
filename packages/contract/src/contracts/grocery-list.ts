@@ -1,17 +1,16 @@
 import { appAuthenticatedBase } from "@contract/utils/oc.base"
-// Import domain schemas directly for better type safety and reuse
 import {
   GroceryListCreateSchema,
   GroceryListId,
   GroceryListUpdateSchema,
 } from "@domain/entities/grocery-list.entity"
+import { type } from "@orpc/contract"
 import { Schema as S } from "effect"
 import {
   DashboardStatsSchema,
-  ListSummarySchema,
-  RecentListsParamsSchema,
+  GetListsParamsSchema,
+  GetListsResultSchema,
 } from "../schemas/grocery-list"
-import { type } from "@orpc/contract"
 
 const groceryListBase = appAuthenticatedBase
 
@@ -25,15 +24,15 @@ export const getStats = groceryListBase
   .input(type<void>())
   .output(S.standardSchemaV1(DashboardStatsSchema))
 
-export const getRecentLists = groceryListBase
+export const getLists = groceryListBase
   .route({
     method: "GET",
-    path: "/grocery-list/recent",
-    summary: "Get recent grocery lists for dashboard",
+    path: "/grocery-list",
+    summary: "Get grocery lists with optional filters and pagination",
     tags: ["grocery-list"],
   })
-  .input(S.standardSchemaV1(RecentListsParamsSchema))
-  .output(S.standardSchemaV1(ListSummarySchema))
+  .input(S.standardSchemaV1(GetListsParamsSchema))
+  .output(S.standardSchemaV1(GetListsResultSchema))
 
 export const getListById = groceryListBase
   .route({
@@ -52,7 +51,7 @@ export const getListById = groceryListBase
       }),
     ),
   )
-  .output(S.standardSchemaV1(ListSummarySchema))
+  .output(S.standardSchemaV1(GetListsResultSchema))
 
 export const createGroceryList = groceryListBase
   .route({
@@ -62,7 +61,7 @@ export const createGroceryList = groceryListBase
     tags: ["grocery-list"],
   })
   .input(S.standardSchemaV1(GroceryListCreateSchema))
-  .output(S.standardSchemaV1(ListSummarySchema))
+  .output(S.standardSchemaV1(GetListsResultSchema))
 
 export const updateGroceryList = groceryListBase
   .route({
@@ -82,7 +81,7 @@ export const updateGroceryList = groceryListBase
       }),
     ),
   )
-  .output(S.standardSchemaV1(ListSummarySchema))
+  .output(S.standardSchemaV1(GetListsResultSchema))
 
 export const deleteGroceryList = groceryListBase
   .route({
@@ -103,27 +102,9 @@ export const deleteGroceryList = groceryListBase
   )
   .output(S.standardSchemaV1(S.Void))
 
-export const getGroceryListsWithFilters = groceryListBase
-  .route({
-    method: "GET",
-    path: "/grocery-list/filtered",
-    summary: "Get filtered grocery lists",
-    tags: ["grocery-list"],
-  })
-  .input(
-    S.standardSchemaV1(
-      S.Struct({
-        search: S.optional(S.String),
-        status: S.optional(S.Literal("active", "inactive")),
-        pagination: RecentListsParamsSchema,
-      }),
-    ),
-  )
-  .output(S.standardSchemaV1(S.Array(ListSummarySchema)))
-
 export default {
   getStats,
-  getRecentLists,
+  getLists,
   getListById,
   createGroceryList,
   updateGroceryList,

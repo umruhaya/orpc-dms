@@ -1,25 +1,28 @@
-import { useQuery } from "@tanstack/react-query"
-import { orpc } from "../orpc"
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { orpc } from "../orpc";
 
 export const useDashboardStats = () => {
-  const opts = orpc.authenticated.groceryList.getStats.queryOptions()
+  const opts = orpc.authenticated.groceryList.getStats.queryOptions();
 
-  return useQuery(opts)
-}
+  return useQuery(opts);
+};
 
 export const useRecentLists = () => {
-  const opts = orpc.authenticated.groceryList.getRecentLists.queryOptions({
-    input: { page: 1, limit: 5 },
-    select: (data) => data.lists,
-    // select: (data) =>
-    //   data.lists.map((list) => ({
-    //     id: list.id,
-    //     name: list.name,
-    //     description: list.description,
-    //     updatedAt: list.updatedAt.toString(),
-    //
-    //   })),
-  })
+  const since = useMemo(
+    () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    [],
+  );
 
-  return useQuery(opts)
-}
+  const opts = orpc.authenticated.groceryList.getLists.queryOptions({
+    input: {
+      limit: 5,
+      page: 1,
+      since,
+      search: "",
+    },
+    select: (data) => data.items,
+  });
+
+  return useQuery(opts);
+};

@@ -1,14 +1,25 @@
 import { GroceryListSchema } from "@domain/entities/grocery-list.entity"
-import { PaginationParamsSchema } from "@domain/utils/pagination.utils"
+import { DateTime } from "@domain/utils"
+import {
+  PaginatedResultSchema,
+  PaginationParamsSchema,
+} from "@domain/utils/pagination.utils"
 import { Schema as S } from "effect"
 
 const list = GroceryListSchema.pipe(S.omit("ownerId"))
 export type GroceryList = S.Schema.Encoded<typeof list>
 
-const lists = S.Array(list)
-export const ListSummarySchema = S.Struct({
-  lists,
-})
+export const GetListsParamsSchema = PaginationParamsSchema.pipe(
+  S.extend(
+    S.Struct({
+      search: S.optional(S.String),
+      status: S.optional(S.Literal("active", "inactive")),
+      since: S.optional(DateTime),
+    }),
+  ),
+)
+
+export const GetListsResultSchema = PaginatedResultSchema(list)
 
 export const DashboardStatsSchema = S.Struct({
   totalLists: S.Number,
@@ -17,8 +28,6 @@ export const DashboardStatsSchema = S.Struct({
   completedToday: S.Number,
 })
 
-export const RecentListsParamsSchema = PaginationParamsSchema
-
-export type ListSummary = S.Schema.Encoded<typeof ListSummarySchema>
+export type GetListsParams = S.Schema.Encoded<typeof GetListsParamsSchema>
+export type GetListsResult = S.Schema.Encoded<typeof GetListsResultSchema>
 export type DashboardStats = S.Schema.Encoded<typeof DashboardStatsSchema>
-export type RecentListsParams = S.Schema.Encoded<typeof RecentListsParamsSchema>

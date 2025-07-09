@@ -13,16 +13,20 @@ export const DEFAULT_PAGE = 1
 export const DEFAULT_LIMIT = 10
 export const DEFAULT_SORT_ORDER = "asc" as const
 
-export const PaginatedResultSchema = <T extends S.Schema.Any>(itemSchema: T) =>
-  S.Struct({
-    items: S.Array(itemSchema),
-    totalCount: S.Number,
-    page: S.Number,
-    limit: S.Number,
-    totalPages: S.Number,
-    hasNext: S.Boolean,
-    hasPrevious: S.Boolean,
-  })
+export const PaginatedResultSchema = <In, Out>(
+  itemSchema: S.Schema<In, Out, never>,
+) =>
+  S.asSchema(
+    S.Struct({
+      items: S.Array(itemSchema),
+      totalCount: S.Number,
+      page: S.Number,
+      limit: S.Number,
+      totalPages: S.Number,
+      hasNext: S.Boolean,
+      hasPrevious: S.Boolean,
+    }),
+  )
 
 export type PaginatedResult<T> = {
   items: T[]

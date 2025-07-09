@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as PrivateRouteImport } from './routes/_private'
 import { Route as PrivateIndexRouteImport } from './routes/_private/index'
+import { Route as PrivateListsRouteImport } from './routes/_private/lists'
 import { Route as PublicAuthRegisterRouteImport } from './routes/_public/auth/register'
 import { Route as PublicAuthLoginRouteImport } from './routes/_public/auth/login'
 
@@ -28,6 +29,11 @@ const PrivateIndexRoute = PrivateIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PrivateRoute,
 } as any)
+const PrivateListsRoute = PrivateListsRouteImport.update({
+  id: '/lists',
+  path: '/lists',
+  getParentRoute: () => PrivateRoute,
+} as any)
 const PublicAuthRegisterRoute = PublicAuthRegisterRouteImport.update({
   id: '/auth/register',
   path: '/auth/register',
@@ -40,11 +46,13 @@ const PublicAuthLoginRoute = PublicAuthLoginRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/lists': typeof PrivateListsRoute
   '/': typeof PrivateIndexRoute
   '/auth/login': typeof PublicAuthLoginRoute
   '/auth/register': typeof PublicAuthRegisterRoute
 }
 export interface FileRoutesByTo {
+  '/lists': typeof PrivateListsRoute
   '/': typeof PrivateIndexRoute
   '/auth/login': typeof PublicAuthLoginRoute
   '/auth/register': typeof PublicAuthRegisterRoute
@@ -53,19 +61,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_private': typeof PrivateRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/_private/lists': typeof PrivateListsRoute
   '/_private/': typeof PrivateIndexRoute
   '/_public/auth/login': typeof PublicAuthLoginRoute
   '/_public/auth/register': typeof PublicAuthRegisterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth/login' | '/auth/register'
+  fullPaths: '/lists' | '/' | '/auth/login' | '/auth/register'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth/login' | '/auth/register'
+  to: '/lists' | '/' | '/auth/login' | '/auth/register'
   id:
     | '__root__'
     | '/_private'
     | '/_public'
+    | '/_private/lists'
     | '/_private/'
     | '/_public/auth/login'
     | '/_public/auth/register'
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivateIndexRouteImport
       parentRoute: typeof PrivateRoute
     }
+    '/_private/lists': {
+      id: '/_private/lists'
+      path: '/lists'
+      fullPath: '/lists'
+      preLoaderRoute: typeof PrivateListsRouteImport
+      parentRoute: typeof PrivateRoute
+    }
     '/_public/auth/register': {
       id: '/_public/auth/register'
       path: '/auth/register'
@@ -117,10 +134,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface PrivateRouteChildren {
+  PrivateListsRoute: typeof PrivateListsRoute
   PrivateIndexRoute: typeof PrivateIndexRoute
 }
 
 const PrivateRouteChildren: PrivateRouteChildren = {
+  PrivateListsRoute: PrivateListsRoute,
   PrivateIndexRoute: PrivateIndexRoute,
 }
 
