@@ -1,10 +1,10 @@
-import { parseErrorsToValidationError } from "@application/utils/validation-error.utils";
-import { Result } from "@carbonteq/fp";
+import { parseErrorsToValidationError } from "@application/utils/validation-error.utils"
+import { Result } from "@carbonteq/fp"
 import type {
   DashboardStats,
   GetListsParams,
-} from "@contract/schemas/grocery-list";
-import type { PaginatedResult } from "@domain/utils/pagination.utils";
+} from "@contract/schemas/grocery-list"
+import type { PaginatedResult } from "@domain/utils/pagination.utils"
 // biome-ignore lint/style/useImportType: Dependency injection
 import {
   type GroceryListEncoded,
@@ -13,11 +13,11 @@ import {
   ItemRepository,
   type UserEntity,
   type ValidationError,
-} from "@repo/domain";
-import { DateTime as DT } from "effect";
-import { autoInjectable } from "tsyringe";
+} from "@repo/domain"
+import { DateTime as DT } from "effect"
+import { autoInjectable } from "tsyringe"
 
-export type { GetListsParams };
+export type { GetListsParams }
 
 @autoInjectable()
 export class GroceryListAppService {
@@ -29,13 +29,13 @@ export class GroceryListAppService {
   async findGroceryListsForUser(
     user: UserEntity,
   ): Promise<Result<{ lists: GroceryListEncoded[] }, ValidationError>> {
-    const lists = await this.groceryListRepo.findByUserId(user.id);
+    const lists = await this.groceryListRepo.findByUserId(user.id)
     const listsEncoded = lists
       .flatMap((lists) => Result.all(...lists.map((l) => l.serialize())))
       .mapErr(parseErrorsToValidationError)
-      .map((lists) => ({ lists }));
+      .map((lists) => ({ lists }))
 
-    return listsEncoded;
+    return listsEncoded
   }
 
   async findGroceryListsWithFilters(
@@ -44,11 +44,10 @@ export class GroceryListAppService {
   ): Promise<Result<PaginatedResult<GroceryListEncoded>, ValidationError>> {
     const since = filters.sinceMs
       ? new Date(
-          DT.unsafeNow().pipe(
-            DT.subtract({ millis: filters.sinceMs }),
-          ).epochMillis,
+          DT.unsafeNow().pipe(DT.subtract({ millis: filters.sinceMs }))
+            .epochMillis,
         )
-      : undefined;
+      : undefined
 
     const repoFilters: GroceryListFindFilters = {
       userId: user.id,
@@ -59,30 +58,30 @@ export class GroceryListAppService {
       limit: filters.limit,
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
-    };
-    const result = await this.groceryListRepo.findWithFilters(repoFilters);
+    }
+    const result = await this.groceryListRepo.findWithFilters(repoFilters)
 
     return result
       .flatMap((paginatedResult) => {
         const serializedItems = Result.all(
           ...paginatedResult.items.map((item) => item.serialize()),
-        );
+        )
         return serializedItems.map((items) => ({
           ...paginatedResult,
           items,
-        }));
+        }))
       })
-      .mapErr(parseErrorsToValidationError);
+      .mapErr(parseErrorsToValidationError)
   }
 
   async getStatsForUser(
     user: UserEntity,
   ): Promise<Result<DashboardStats, ValidationError>> {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
 
     const [totalLists, recentLists, pendingItems, completedToday] =
       await Promise.all([
@@ -94,15 +93,15 @@ export class GroceryListAppService {
           status: "bought",
           updatedSince: startOfToday,
         }),
-      ]);
+      ])
 
     const stats: DashboardStats = {
       totalLists,
       recentLists,
       pendingItems,
       completedToday,
-    };
+    }
 
-    return Result.Ok(stats);
+    return Result.Ok(stats)
   }
 }

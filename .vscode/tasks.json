@@ -5,10 +5,7 @@
       "label": "Start Backend",
       "type": "shell",
       "command": "bun",
-      "args": [
-        "run",
-        "dev"
-      ],
+      "args": ["run", "dev"],
       "options": {
         "cwd": "${workspaceFolder}/apps/backend"
       },
@@ -28,10 +25,7 @@
       "label": "Start Frontend",
       "type": "shell",
       "command": "bun",
-      "args": [
-        "run",
-        "dev"
-      ],
+      "args": ["run", "dev"],
       "options": {
         "cwd": "${workspaceFolder}/apps/frontend"
       },
@@ -50,10 +44,7 @@
     {
       "label": "Start Both Servers",
       "dependsOrder": "parallel",
-      "dependsOn": [
-        "Start Backend",
-        "Start Frontend"
-      ],
+      "dependsOn": ["Start Backend", "Start Frontend"],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -68,10 +59,7 @@
       "label": "Seed Database",
       "type": "shell",
       "command": "bun",
-      "args": [
-        "run",
-        "db:seed"
-      ],
+      "args": ["run", "db:seed"],
       "options": {
         "cwd": "${workspaceFolder}/apps/backend"
       },
@@ -90,10 +78,7 @@
       "label": "Run Database Migrations",
       "type": "shell",
       "command": "bun",
-      "args": [
-        "run",
-        "db:migrate"
-      ],
+      "args": ["run", "db:migrate"],
       "options": {
         "cwd": "${workspaceFolder}/apps/backend"
       },
