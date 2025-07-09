@@ -1,18 +1,13 @@
-import { useRecentLists } from "../../../utils/hooks/dashboard-hooks";
-import { RecentLists } from "./RecentLists";
-import { RecentListsEmpty } from "./RecentListsEmpty";
-import { RecentListsSkeleton } from "./RecentListsSkeleton";
+import { useRecentLists } from "../../../utils/hooks/dashboard-hooks"
+import { RecentLists } from "./RecentLists"
+import { RecentListsEmpty } from "./RecentListsEmpty"
 
 export const RecentListsContainer = () => {
-  const { data: lists, isLoading } = useRecentLists();
-
-  if (isLoading) {
-    return <RecentListsSkeleton />;
-  }
+  const { data: lists } = useRecentLists()
 
   if (!lists || lists.length === 0) {
-    return <RecentListsEmpty />;
+    return <RecentListsEmpty />
   }
 
-  return <RecentLists lists={lists} />;
-};
+  return <RecentLists lists={lists} />
+}

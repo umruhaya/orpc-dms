@@ -1,17 +1,8 @@
-import { useDashboardStats } from "../../../utils/hooks/dashboard-hooks";
-import { DashboardStats } from "./DashboardStats";
-import { DashboardStatsSkeleton } from "./DashboardStatsSkeleton";
+import { useDashboardStats } from "../../../utils/hooks/dashboard-hooks"
+import { DashboardStats } from "./DashboardStats"
 
 export const DashboardStatsContainer = () => {
-  const { data: stats, isLoading } = useDashboardStats();
+  const { data: stats } = useDashboardStats()
 
-  if (isLoading) {
-    return <DashboardStatsSkeleton />;
-  }
-
-  if (!stats || stats.totalLists === 0) {
-    return null;
-  }
-
-  return <DashboardStats stats={stats} />;
-};
+  return <DashboardStats stats={stats} />
+}

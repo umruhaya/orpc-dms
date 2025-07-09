@@ -1,11 +1,11 @@
-import type { GroceryList } from "@contract/schemas/grocery-list";
-import { ListCard } from "@app/components/shared/ListCard";
-import { Button, Group, SimpleGrid, Stack, Title } from "@mantine/core";
-import { Link } from "@tanstack/react-router";
+import { ListCard } from "@app/components/shared/ListCard"
+import type { GroceryList } from "@contract/schemas/grocery-list"
+import { Button, Group, SimpleGrid, Stack, Title } from "@mantine/core"
+import { Link } from "@tanstack/react-router"
 
 type RecentListsProps = {
-  lists: GroceryList[];
-};
+  lists: GroceryList[]
+}
 
 export const RecentLists = ({ lists }: RecentListsProps) => {
   return (
@@ -22,5 +22,5 @@ export const RecentLists = ({ lists }: RecentListsProps) => {
         ))}
       </SimpleGrid>
     </Stack>
-  );
-};
+  )
+}

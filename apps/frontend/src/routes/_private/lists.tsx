@@ -4,7 +4,6 @@ import {
   Button,
   Container,
   Group,
-  Loader,
   Select,
   SimpleGrid,
   Stack,
@@ -23,14 +22,14 @@ const GroceryListsPage = () => {
   const [status, setStatus] = useState<"active" | "inactive" | "">("")
   const [debouncedSearch] = useDebouncedValue(search, 300)
 
-  const { data, isLoading, error } = useLists({
+  const { data } = useLists({
     limit: 50,
     page: 1,
-    search: debouncedSearch || undefined, // undefined part is important for the query cache from server to be maintained on component mount
+    search: debouncedSearch || undefined,
     status: status || undefined,
   })
 
-  const lists = data?.items || []
+  const lists = (data as any)?.items || []
 
   return (
     <Container fluid p="xl" pt="xl">
@@ -68,15 +67,7 @@ const GroceryListsPage = () => {
           />
         </Group>
 
-        {isLoading ? (
-          <Group justify="center" p="xl">
-            <Loader />
-          </Group>
-        ) : error ? (
-          <Text c="red" ta="center">
-            Error loading lists. Please try again.
-          </Text>
-        ) : !lists || lists.length === 0 ? (
+        {lists.length === 0 ? (
           <Stack align="center" gap="md" p="xl">
             <Text c="dimmed" size="lg" ta="center">
               {search || status

@@ -1,11 +1,11 @@
-import type { GroceryList } from "@contract/schemas/grocery-list";
-import { Badge, Button, Card, Group, Text } from "@mantine/core";
-import { Link } from "@tanstack/react-router";
-import { Clock } from "lucide-react";
+import type { GroceryList } from "@contract/schemas/grocery-list"
+import { Badge, Button, Card, Group, Text } from "@mantine/core"
+import { Link } from "@tanstack/react-router"
+import { Clock } from "lucide-react"
 
 type ListCardProps = {
-  list: GroceryList;
-};
+  list: GroceryList
+}
 
 export const ListCard = ({ list }: ListCardProps) => {
   return (
@@ -48,5 +48,5 @@ export const ListCard = ({ list }: ListCardProps) => {
         </Group>
       </Group>
     </Card>
-  );
-};
+  )
+}
