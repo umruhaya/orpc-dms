@@ -7,10 +7,13 @@ import type {
 import { GroceryListEntity as GList } from "@domain/entities/grocery-list.entity"
 import type { UserType } from "@domain/entities/user.entity"
 import { GroceryListNotFoundError } from "@domain/errors/grocery-list.errors"
-import { GroceryListRepository } from "@domain/repositories/grocery-list.repository"
+import {
+  type GroceryListCountFilters,
+  GroceryListRepository,
+} from "@domain/repositories/grocery-list.repository"
 import type { RepoResult, RepoUnitResult } from "@domain/utils"
 import { DateTime } from "@domain/utils/refined-types"
-import { desc, eq } from "drizzle-orm"
+import { and, desc, eq, gte } from "drizzle-orm"
 import type { ParseError } from "effect/ParseResult"
 import { injectable } from "tsyringe"
 import type { AppDatabase } from "../conn"
@@ -101,7 +104,6 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
         return R.Err(new GroceryListNotFoundError(id))
       }
 
-      // @ts-expect-error need to update UnitResult implementation
       return R.UNIT_RESULT
     } catch {
       return R.Err(new GroceryListNotFoundError(id))
@@ -110,7 +112,7 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
 
   async findByUserId(
     userId: UserType["id"],
-  ): Promise<RepoResult<GroceryListEntity[], ParseError[]>> {
+  ): Promise<Result<GroceryListEntity[], ParseError[]>> {
     const results = await this.db
       .select()
       .from(groceryLists)
@@ -120,6 +122,18 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
     const lists = results.map((row) => this.mapToEntity(row))
 
     return R.all(...lists)
+  }
+
+  async count(filters: GroceryListCountFilters): Promise<number> {
+    const c = await this.db.$count(
+      groceryLists,
+      and(
+        filters.userId ? eq(groceryLists.userId, filters.userId) : undefined,
+        filters.since ? gte(groceryLists.createdAt, filters.since) : undefined,
+      ),
+    )
+
+    return c
   }
 
   private mapToEntity(
@@ -132,6 +146,7 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
       ownerId: row.userId,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+      active: row.isActive,
     })
   }
 }

@@ -9,12 +9,14 @@ export const validationErrMap = (err: unknown) => {
 
   if (!(err instanceof ORPCError)) {
     // TODO: handle non-ORPC errors
-    return
+    console.error(err)
+    throw err
   }
 
   if (!(err.cause instanceof ValidationError)) {
     // TODO: handle non-validation errors
-    return
+    console.error(err)
+    throw err
   }
 
   // https://orpc.unnoq.com/docs/advanced/validation-errors#customizing-with-middleware

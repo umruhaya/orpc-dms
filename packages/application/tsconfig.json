@@ -5,20 +5,12 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "paths": {
-      "@application/*": [
-        "./src/*"
-      ],
-      "@domain/*": [
-        "../domain/src/*"
-      ]
+      "@application/*": ["./src/*"],
+      "@domain/*": ["../domain/src/*"],
+      "@contract/*": ["../contract/src/*"]
     }
   },
-  "include": [
-    "src",
-    "test",
-    "./*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src", "test", "./*.ts"],
+  "exclude": ["node_modules"]
 }
+

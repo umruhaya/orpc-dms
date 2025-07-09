@@ -1,17 +1,19 @@
-// Base error class with common properties
 export abstract class AppError extends Error {
   abstract readonly code: string
   readonly timestamp: Date
   readonly context?: Record<string, unknown>
 
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message)
+  constructor(
+    message: string,
+    context?: Record<string, unknown>,
+    cause?: unknown,
+  ) {
+    super(message, { cause })
     this.name = this.constructor.name
     this.timestamp = new Date()
     this.context = context
   }
 
-  // For JSON serialization
   toJSON() {
     return {
       name: this.name,
@@ -28,9 +30,9 @@ export interface ValidationIssue {
   value?: unknown
   message: string
   path?: string[]
+  cause?: unknown
 }
 
-// Base validation error (400)
 export class ValidationError extends AppError {
   readonly code: string = "VALIDATION_ERROR"
   readonly issues: ValidationIssue[]
@@ -39,9 +41,13 @@ export class ValidationError extends AppError {
     message: string,
     issues: ValidationIssue[] = [],
     context?: Record<string, unknown>,
+    cause?: unknown,
   ) {
-    super(message, context)
+    super(message, context, cause)
     this.issues = issues
+    if (!cause) {
+      this.cause = issues?.[0]?.cause
+    }
   }
 
   get field(): string | undefined {
@@ -57,9 +63,10 @@ export class ValidationError extends AppError {
     field?: string,
     value?: unknown,
     context?: Record<string, unknown>,
+    cause?: unknown,
   ): ValidationError {
     const issues: ValidationIssue[] = field ? [{ field, value, message }] : []
-    return new ValidationError(message, issues, context)
+    return new ValidationError(message, issues, context, cause)
   }
 
   static multiple(
@@ -71,7 +78,6 @@ export class ValidationError extends AppError {
   }
 }
 
-// Base not found error (404)
 export class NotFoundError extends AppError {
   readonly code: string = "NOT_FOUND"
   readonly resourceType: string
@@ -81,26 +87,26 @@ export class NotFoundError extends AppError {
     resourceType: string,
     resourceId: string,
     context?: Record<string, unknown>,
+    cause?: unknown,
   ) {
-    super(`${resourceType} with id '${resourceId}' not found`, context)
+    super(`${resourceType} with id '${resourceId}' not found`, context, cause)
     this.resourceType = resourceType
     this.resourceId = resourceId
   }
 }
 
-// Base authorization error (401)
 export class UnauthorizedError extends AppError {
   readonly code: string = "UNAUTHORIZED"
 
   constructor(
     message = "Authentication required",
     context?: Record<string, unknown>,
+    cause?: unknown,
   ) {
-    super(message, context)
+    super(message, context, cause)
   }
 }
 
-// Base permission error (403)
 export class ForbiddenError extends AppError {
   readonly code: string = "FORBIDDEN"
   readonly requiredPermission?: string
@@ -109,24 +115,27 @@ export class ForbiddenError extends AppError {
     message = "Insufficient permissions",
     requiredPermission?: string,
     context?: Record<string, unknown>,
+    cause?: unknown,
   ) {
-    super(message, context)
+    super(message, context, cause)
     this.requiredPermission = requiredPermission
   }
 }
 
-// Base conflict error (409)
 export class ConflictError extends AppError {
   readonly code: string = "CONFLICT"
   readonly conflictReason: string
 
-  constructor(conflictReason: string, context?: Record<string, unknown>) {
-    super(`Conflict: ${conflictReason}`, context)
+  constructor(
+    conflictReason: string,
+    context?: Record<string, unknown>,
+    cause?: unknown,
+  ) {
+    super(`Conflict: ${conflictReason}`, context, cause)
     this.conflictReason = conflictReason
   }
 }
 
-// Base internal server error (500)
 export class InternalError extends AppError {
   readonly code: string = "INTERNAL_ERROR"
   readonly originalError?: Error
@@ -136,12 +145,11 @@ export class InternalError extends AppError {
     originalError?: Error,
     context?: Record<string, unknown>,
   ) {
-    super(message, context)
+    super(message, context, originalError)
     this.originalError = originalError
   }
 }
 
-// Base external service error (502/503)
 export class ExternalServiceError extends AppError {
   readonly code: string = "EXTERNAL_SERVICE_ERROR"
   readonly serviceName: string
@@ -153,13 +161,16 @@ export class ExternalServiceError extends AppError {
     serviceError?: unknown,
     context?: Record<string, unknown>,
   ) {
-    super(message || `External service '${serviceName}' error`, context)
+    super(
+      message || `External service '${serviceName}' error`,
+      context,
+      serviceError,
+    )
     this.serviceName = serviceName
     this.serviceError = serviceError
   }
 }
 
-// Type guards
 export const isAppError = (error: unknown): error is AppError => {
   return error instanceof AppError
 }

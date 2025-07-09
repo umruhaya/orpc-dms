@@ -11,5 +11,6 @@
       "drizzle.config.ts"
     ]
   },
+  "javascript": { "parser": { "unsafeParameterDecoratorsEnabled": true } },
   "extends": "//"
 }

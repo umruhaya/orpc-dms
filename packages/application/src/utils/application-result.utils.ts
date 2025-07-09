@@ -25,77 +25,71 @@ export enum AppErrStatus {
 export class AppError extends Error {
   private constructor(
     readonly status: AppErrStatus,
-    message?: string,
+    message: string,
+    cause?: unknown,
   ) {
-    let msg: string
-    if (message) {
-      msg = message
-    } else {
-      msg = `AppError<${status}>`
-    }
-
-    super(msg)
+    super(message, { cause })
   }
 
-  static NotFound = (msg?: string): AppError =>
-    new AppError(AppErrStatus.NotFound, msg)
+  static NotFound = (msg: string, cause?: unknown): AppError =>
+    new AppError(AppErrStatus.NotFound, msg, cause)
 
-  static Unauthorized = (msg?: string): AppError =>
-    new AppError(AppErrStatus.Unauthorized, msg)
+  static Unauthorized = (msg: string, cause?: unknown): AppError =>
+    new AppError(AppErrStatus.Unauthorized, msg, cause)
 
-  static Forbidden = (msg?: string): AppError =>
-    new AppError(AppErrStatus.Forbidden, msg)
+  static Forbidden = (msg: string, cause?: unknown): AppError =>
+    new AppError(AppErrStatus.Forbidden, msg, cause)
 
-  static InvalidData = (msg?: string): AppError =>
-    new AppError(AppErrStatus.InvalidData, msg)
+  static InvalidData = (msg: string, cause?: unknown): AppError =>
+    new AppError(AppErrStatus.InvalidData, msg, cause)
 
-  static Conflict = (msg?: string): AppError =>
-    new AppError(AppErrStatus.Conflict, msg)
+  static Conflict = (msg: string, cause?: unknown): AppError =>
+    new AppError(AppErrStatus.Conflict, msg, cause)
 
-  static InternalError = (msg?: string): AppError =>
-    new AppError(AppErrStatus.InternalError, msg)
+  static InternalError = (msg: string, cause?: unknown): AppError =>
+    new AppError(AppErrStatus.InternalError, msg, cause)
 
-  static ExternalServiceError = (msg?: string): AppError =>
-    new AppError(AppErrStatus.ExternalServiceError, msg)
+  static ExternalServiceError = (msg: string, cause?: unknown): AppError =>
+    new AppError(AppErrStatus.ExternalServiceError, msg, cause)
 
-  static Generic = (msg: string): AppError =>
-    new AppError(AppErrStatus.Generic, msg)
+  static Generic = (msg: string, cause?: unknown): AppError =>
+    new AppError(AppErrStatus.Generic, msg, cause)
 
   static fromErr = (e: Error): AppError => {
     if (e instanceof AppError) {
-      return new AppError(e.status, e.message)
+      return new AppError(e.status, e.message, e)
     }
 
     if (e instanceof NotFoundError) {
-      return AppError.NotFound(e.message)
+      return AppError.NotFound(e.message, e)
     }
 
     if (e instanceof UnauthorizedError) {
-      return AppError.Unauthorized(e.message)
+      return AppError.Unauthorized(e.message, e)
     }
 
     if (e instanceof ForbiddenError) {
-      return AppError.Forbidden(e.message)
+      return AppError.Forbidden(e.message, e)
     }
 
     if (e instanceof ValidationError || e instanceof ParseError) {
-      return AppError.InvalidData(e.message)
+      return AppError.InvalidData(e.message, e)
     }
 
     if (e instanceof ConflictError) {
-      return AppError.Conflict(e.message)
+      return AppError.Conflict(e.message, e)
     }
 
     if (e instanceof InternalError) {
-      return AppError.InternalError(e.message)
+      return AppError.InternalError(e.message, e)
     }
 
     if (e instanceof ExternalServiceError) {
-      return AppError.ExternalServiceError(e.message)
+      return AppError.ExternalServiceError(e.message, e)
     }
 
     // Fallback for unknown errors
-    return AppError.Generic(e.message)
+    return AppError.Generic(e.message, e)
   }
 }
 

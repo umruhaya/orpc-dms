@@ -18,13 +18,21 @@ export const ItemSchema = defineEntityStruct({
   listId: GroceryListId,
   name: S.String.pipe(S.minLength(1)),
   quantity: S.Number.pipe(S.positive()),
+  notes: S.String,
   status: ItemStatusSchema,
   createdBy: UserIdSchema,
 })
 
+export const ItemUpdateSchema = S.partial(
+  ItemSchema.pipe(S.pick("name", "quantity", "status", "notes")),
+)
+
 export type ItemType = S.Schema.Type<typeof ItemSchema>
 export type ItemEncoded = S.Schema.Encoded<typeof ItemSchema>
 export type ItemStatus = S.Schema.Type<typeof ItemStatusSchema>
+
+export type ItemUpdateData = S.Schema.Type<typeof ItemUpdateSchema>
+export type ItemUpdateDataEncoded = S.Schema.Encoded<typeof ItemUpdateSchema>
 
 const bridge = createEncoderDecoderBridge(ItemSchema)
 
@@ -36,6 +44,7 @@ export class ItemEntity extends BaseEntity implements ItemType {
   readonly quantity: number
   readonly status: ItemStatus
   readonly createdBy: ItemType["createdBy"]
+  readonly notes: string
 
   private constructor(data: ItemType) {
     super(data)
@@ -45,6 +54,7 @@ export class ItemEntity extends BaseEntity implements ItemType {
     this.quantity = data.quantity
     this.status = data.status
     this.createdBy = data.createdBy
+    this.notes = data.notes
   }
 
   static from(data: ItemType): ItemEntity {
@@ -52,7 +62,7 @@ export class ItemEntity extends BaseEntity implements ItemType {
   }
 
   static fromEncoded(data: ItemEncoded) {
-    return bridge.deserialize(data)
+    return bridge.deserialize(data).map((d) => new ItemEntity(d))
   }
 
   isPending(): boolean {
@@ -102,6 +112,7 @@ export class ItemEntity extends BaseEntity implements ItemType {
       updatedAt: this.updatedAt,
       listId: this.listId,
       name: this.name,
+      notes: this.notes,
       quantity: this.quantity,
       status: this.status,
       createdBy: this.createdBy,

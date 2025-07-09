@@ -2,7 +2,14 @@ import type { GroceryListType } from "@domain/entities/grocery-list.entity"
 import type { ItemType } from "@domain/entities/item.entity"
 import type { UserType } from "@domain/entities/user.entity"
 import { relations } from "drizzle-orm"
-import { boolean, integer, pgTable, text, uuid } from "drizzle-orm/pg-core"
+import {
+  boolean,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  uuid,
+} from "drizzle-orm/pg-core"
 import { getBaseColumns } from "../db.utils"
 import { user } from "./auth.model"
 
@@ -21,6 +28,7 @@ export const groceryLists = pgTable("grocery_lists", {
     .references(() => user.id, { onDelete: "cascade" }),
 })
 
+export const pgItemStatusEnum = pgEnum("item_status", ["pending", "bought"])
 export const groceryListItems = pgTable("grocery_list_items", {
   ...getBaseColumns<ItemType["id"]>(),
 
@@ -30,9 +38,13 @@ export const groceryListItems = pgTable("grocery_list_items", {
     .references(() => groceryLists.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   quantity: integer("quantity").notNull(),
-  category: text("category"),
-  isCompleted: boolean("is_completed").notNull().default(false),
+  status: pgItemStatusEnum("status").notNull().default("pending"),
+
   notes: text("notes"),
+  createdBy: uuid("created_by")
+    .$type<UserId>()
+    // .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
 })
 
 export const groceryListsRelations = relations(

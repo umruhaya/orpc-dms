@@ -1,18 +1,10 @@
-// biome-ignore lint/style/useImportType: Dependency injection
-import { GroceryListAppService } from "@application/services/grocery-list.app-service"
 import type { CreateGroceryListDto } from "@application/dtos/grocery-list.dto"
+// biome-ignore lint/style/useImportType: Dependecy injection
+import { GroceryListAppService } from "@application/services/grocery-list.app-service"
 import { ApplicationResult } from "@application/utils/application-result.utils"
-import {
-  ResultUtils,
-  type GroceryListEncoded,
-  type UserEntity,
-} from "@repo/domain"
+import type { DashboardStats } from "@contract/schemas/grocery-list"
+import type { GroceryListEncoded, UserEntity } from "@repo/domain"
 import { autoInjectable } from "tsyringe"
-
-export type DashboardStats = {
-  totalLists: number
-  recentLists: GroceryListEncoded[]
-}
 
 @autoInjectable()
 export class GroceryListWorkflows {
@@ -24,25 +16,17 @@ export class GroceryListWorkflows {
     return ApplicationResult.Err(new Error("Not implemented yet"))
   }
 
-  async listGroceryListsForUser(user: UserEntity) {
+  async fetchGroceryListsForUser(user: UserEntity) {
     const result = await this.groceryListService.findGroceryListsForUser(user)
     return ApplicationResult.fromResult(result)
   }
 
-  async getDashboardData(
+  async getDashboardStats(
     user: UserEntity,
   ): Promise<ApplicationResult<DashboardStats>> {
-    const listsResult =
-      await this.groceryListService.findGroceryListsForUser(user)
+    const statsResult = await this.groceryListService.getStatsForUser(user)
 
-    const stats = listsResult
-      .map(({ lists }) => lists.slice(0, 4))
-      .map((recentLists) => ({
-        recentLists,
-        totalLists: recentLists.length,
-      }))
-
-    return ApplicationResult.fromResult(stats)
+    return ApplicationResult.fromResult(statsResult)
   }
 
   async updateGroceryList(

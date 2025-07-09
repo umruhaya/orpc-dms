@@ -1,3 +1,4 @@
+import type { Result } from "@carbonteq/fp"
 import type { GroceryListNotFoundError } from "@domain/errors/grocery-list.errors"
 import type { RepoResult, RepoUnitResult } from "@domain/utils"
 import type { ParseError } from "effect/ParseResult"
@@ -7,7 +8,11 @@ import type {
   GroceryListUpdateData,
 } from "../entities/grocery-list.entity"
 import type { UserType } from "../entities/user.entity"
-import type { Result } from "@carbonteq/fp"
+
+export type GroceryListCountFilters = {
+  userId?: UserType["id"]
+  since?: Date
+}
 
 export abstract class GroceryListRepository {
   abstract create(
@@ -26,4 +31,5 @@ export abstract class GroceryListRepository {
   abstract findByUserId(
     userId: UserType["id"],
   ): Promise<Result<GroceryListEntity[], ParseError[]>>
+  abstract count(filters: GroceryListCountFilters): Promise<number>
 }

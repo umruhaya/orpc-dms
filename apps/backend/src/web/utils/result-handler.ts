@@ -1,4 +1,3 @@
-// Import the ApplicationResult type
 import type { ApplicationResult } from "@application/utils/application-result.utils"
 import { ORPCError } from "@orpc/server"
 
@@ -12,25 +11,32 @@ export const handleAppResult = <T>(result: ApplicationResult<T>): T => {
 
   switch (error.status) {
     case "NotFound":
-      throw new ORPCError("NOT_FOUND", { message, status: 404 })
+      throw new ORPCError("NOT_FOUND", { message, status: 404, cause: error })
 
     case "Unauthorized":
-      throw new ORPCError("UNAUTHORIZED", { message, status: 401 })
+      throw new ORPCError("UNAUTHORIZED", {
+        message,
+        status: 401,
+        cause: error,
+      })
 
     case "Forbidden":
-      throw new ORPCError("FORBIDDEN", { message, status: 403 })
+      throw new ORPCError("FORBIDDEN", { message, status: 403, cause: error })
 
     case "InvalidData":
-      throw new ORPCError("UNPROCESSABLE_CONTENT", { message, status: 422 })
+      throw new ORPCError("UNPROCESSABLE_CONTENT", {
+        message,
+        status: 422,
+        cause: error,
+      })
 
     case "Conflict":
-      throw new ORPCError("CONFLICT", { message, status: 409 })
+      throw new ORPCError("CONFLICT", { message, status: 409, cause: error })
 
     case "ExternalServiceError":
-      throw new ORPCError("BAD_GATEWAY", { message, status: 502 })
+      throw new ORPCError("BAD_GATEWAY", { message, status: 502, cause: error })
 
-    // Default case for InternalError, Generic, or unknown error types
     default:
-      throw new ORPCError("INTERNAL_SERVER_ERROR", { message })
+      throw new ORPCError("INTERNAL_SERVER_ERROR", { message, cause: error })
   }
 }

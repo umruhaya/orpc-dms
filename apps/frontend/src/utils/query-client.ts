@@ -8,11 +8,11 @@ const orpcSerializer = new StandardRPCJsonSerializer({
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // 1 minute
-      // refetchOnWindowFocus: process.env.NODE_ENV === "production",
+      staleTime: 120 * 1000, // 2 minute
+      refetchOnWindowFocus: false,
     },
     mutations: {
-      throwOnError: false, // Never throw errors for mutations
+      throwOnError: false, // Never throw errors for mutations, instead handle them in the component
     },
 
     // The config below is to allow working with tanstack query hydration (SSR)

@@ -1,29 +1,24 @@
-import { Container, Flex, Title } from "@mantine/core"
+import { Container, Stack, Title } from "@mantine/core"
 import { createFileRoute } from "@tanstack/react-router"
-import Dashboard from "../../components/dashboard/Dashboard"
-import { useDashboard } from "../../utils/hooks/dashboard-hooks"
+import {
+  DashboardStatsContainer,
+  QuickActions,
+  RecentListsContainer,
+} from "../../components/dashboard"
 
 const Home = () => {
   const { user } = Route.useRouteContext()
-  const { dashboardData, isLoading } = useDashboard()
-
-  // Show loading state
-  if (isLoading || !dashboardData) {
-    return (
-      <Container h="100vh" p="xs" w="100%">
-        <Flex align="center" justify="center">
-          <Title order={2}>Loading...</Title>
-        </Flex>
-      </Container>
-    )
-  }
 
   return (
-    <Dashboard
-      isLoading={isLoading}
-      stats={dashboardData}
-      userName={user.name}
-    />
+    <Container fluid p="md">
+      <Stack gap="lg">
+        <Title order={2}>Welcome back, {user.name}! 👋</Title>
+        <QuickActions />
+
+        <DashboardStatsContainer />
+        <RecentListsContainer />
+      </Stack>
+    </Container>
   )
 }
 

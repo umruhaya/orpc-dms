@@ -35,6 +35,7 @@
   "dependencies": {
     "@orpc/contract": "catalog:",
     "@orpc/zod": "catalog:",
+    "@repo/domain": "workspace:*",
     "zod": "catalog:",
     "effect": "catalog:"
   }

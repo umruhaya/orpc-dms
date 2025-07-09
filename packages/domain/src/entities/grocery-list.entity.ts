@@ -12,6 +12,7 @@ export const GroceryListSchema = defineEntityStruct({
   id: GroceryListId,
   name: S.String.pipe(S.minLength(1)),
   description: S.String,
+  active: S.Boolean,
   ownerId: UUID.pipe(S.brand("UserId")),
 })
 
@@ -20,7 +21,7 @@ export const GroceryListCreateSchema = GroceryListSchema.pipe(
 )
 
 export const GroceryListUpdateSchema = S.partialWith(
-  GroceryListSchema.pipe(S.pick("name", "description")),
+  GroceryListSchema.pipe(S.pick("name", "description", "active")),
   { exact: true },
 )
 
@@ -39,6 +40,7 @@ export class GroceryListEntity extends BaseEntity implements GroceryListType {
   override readonly id: GroceryListType["id"]
 
   readonly name: string
+  readonly active: boolean
   readonly description: GroceryListType["description"]
   readonly ownerId: GroceryListType["ownerId"]
 
@@ -48,6 +50,7 @@ export class GroceryListEntity extends BaseEntity implements GroceryListType {
     this.name = data.name
     this.description = data.description
     this.ownerId = data.ownerId
+    this.active = data.active
   }
 
   static create(
@@ -59,6 +62,7 @@ export class GroceryListEntity extends BaseEntity implements GroceryListType {
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       name: data.name,
+      active: false,
       description: data.description,
       ownerId: owner.id,
     }
@@ -74,7 +78,7 @@ export class GroceryListEntity extends BaseEntity implements GroceryListType {
     return bridge.deserialize(data).map((d) => new GroceryListEntity(d))
   }
 
-  isOwner(userId: string): boolean {
+  isOwner(userId: UserType["id"]): boolean {
     return this.ownerId === userId
   }
 
@@ -93,6 +97,7 @@ export class GroceryListEntity extends BaseEntity implements GroceryListType {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       name: this.name,
+      active: this.active,
       description: this.description,
       ownerId: this.ownerId,
     })

@@ -109,9 +109,6 @@ function collectIssuesFromParseError(
   }
 }
 
-/**
- * Extracts a human-readable error message from a ParseError.
- */
 function extractErrorMessage(error: ParseError): string {
   // Try to get the message from various possible locations
   const errorRecord = error as unknown as Record<string, unknown>
@@ -134,9 +131,6 @@ function extractErrorMessage(error: ParseError): string {
   return "Validation failed"
 }
 
-/**
- * Extracts the actual value that failed validation from a ParseError.
- */
 function extractActualValue(error: ParseError): unknown {
   const errorRecord = error as unknown as Record<string, unknown>
   return errorRecord.actual

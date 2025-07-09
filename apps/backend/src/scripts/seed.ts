@@ -236,9 +236,10 @@ async function seedDatabase() {
             listId: listId as GroceryListType["id"],
             name: item.name,
             quantity: item.quantity,
-            category: item.category,
+            status: "pending",
+            // category: item.category,
             notes: item.notes,
-            isCompleted: false,
+            createdBy: userId as UserType["id"],
           })
         }
         console.log(`      ✅ Added ${listData.items.length} items`)
