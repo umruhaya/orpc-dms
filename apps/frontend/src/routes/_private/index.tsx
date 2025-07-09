@@ -10,11 +10,10 @@ const Home = () => {
   const { user } = Route.useRouteContext()
 
   return (
-    <Container fluid p="md">
-      <Stack gap="lg">
+    <Container fluid p="xl" pt="xl">
+      <Stack gap="2rem">
         <Title order={2}>Welcome back, {user.name}! 👋</Title>
         <QuickActions />
-
         <DashboardStatsContainer />
         <RecentListsContainer />
       </Stack>

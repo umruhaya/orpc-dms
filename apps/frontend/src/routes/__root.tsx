@@ -53,7 +53,7 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => {
             />
             <TanStackRouterDevtools
               initialIsOpen={false}
-              position="bottom-left"
+              position="top-right"
             />
           </>
         ) : null}

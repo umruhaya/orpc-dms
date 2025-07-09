@@ -52,7 +52,6 @@ const ListCard = ({ list }: { list: GroceryList }) => {
     </Card>
   )
 }
-
 export const RecentLists = ({ lists }: RecentListsProps) => {
   return (
     <Stack gap="md">

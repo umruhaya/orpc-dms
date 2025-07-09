@@ -1,12 +1,13 @@
 import LogoutBtn from "@app/components/auth/LogoutBtn"
 import AnchorLink from "@app/components/layout/AnchorLink"
-import { AppShell, Box, Group, Stack, Text } from "@mantine/core"
+import { AppShell, Box, Group, NavLink, Stack, Text } from "@mantine/core"
 import {
   createFileRoute,
   Outlet,
   redirect,
   useRouter,
 } from "@tanstack/react-router"
+import { Home, List, Plus, User, UserPlus } from "lucide-react"
 import { useCallback } from "react"
 
 const PrivateLayout = () => {
@@ -21,29 +22,74 @@ const PrivateLayout = () => {
   }, [navigate, router])
 
   return (
-    <AppShell navbar={{ width: 300, breakpoint: "sm" }}>
-      <AppShell.Navbar p="md">
-        <Stack dir="column" gap="md">
-          <Box>
-            <Group
-              mb="md"
-              pb="md"
-              style={{
-                borderBottom: "1px solid var(--mantine-color-dark-4)",
-              }}
-            >
-              <AnchorLink to="/">
-                <Text fw="bold" ta="center" variant="text">
-                  App
-                </Text>
-              </AnchorLink>
-            </Group>
+    <AppShell header={{ height: 60 }} navbar={{ width: 300, breakpoint: "sm" }}>
+      <AppShell.Header p="md">
+        <Group align="center" justify="center">
+          <Text c="blue" fw="bold" size="lg">
+            Grocery Tracker
+          </Text>
+        </Group>
+      </AppShell.Header>
 
-            <Stack gap="sm"></Stack>
+      <AppShell.Navbar p="md">
+        <Stack dir="column" gap="md" style={{ height: "100%" }}>
+          {/* Navigation Links */}
+          <Box style={{ flex: 1 }}>
+            <Stack gap="xs">
+              <Text c="dimmed" fw="bold" mb="xs" size="xs">
+                NAVIGATION
+              </Text>
+              <NavLink
+                component={AnchorLink}
+                label="Dashboard"
+                leftSection={<Home size={16} />}
+                styles={{
+                  root: { textDecoration: "none" },
+                  label: { textDecoration: "none" },
+                }}
+                to="/"
+              />
+              <NavLink
+                component={AnchorLink}
+                label="All Lists"
+                leftSection={<List size={16} />}
+                styles={{
+                  root: { textDecoration: "none" },
+                  label: { textDecoration: "none" },
+                }}
+                to="/lists"
+              />
+              <NavLink
+                component={AnchorLink}
+                label="Create List"
+                leftSection={<Plus size={16} />}
+                styles={{
+                  root: { textDecoration: "none" },
+                  label: { textDecoration: "none" },
+                }}
+                to="/lists/new"
+              />
+              <Text c="dimmed" fw="bold" mb="xs" mt="md" size="xs">
+                COMING SOON
+              </Text>
+              <NavLink
+                disabled
+                label="List Collaborators"
+                leftSection={<UserPlus size={16} />}
+                style={{ opacity: 0.5 }}
+              />
+              <NavLink
+                disabled
+                label="Profile"
+                leftSection={<User size={16} />}
+                style={{ opacity: 0.5 }}
+              />
+            </Stack>
           </Box>
 
+          {/* Logout Section - Fixed at bottom */}
           <Box
-            mt="md"
+            mt="auto"
             pt="md"
             style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}
           >
@@ -63,7 +109,10 @@ export const Route = createFileRoute("/_private")({
   component: PrivateLayout,
   beforeLoad: ({ context, location }) => {
     if (!context.user) {
-      throw redirect({ to: "/auth/login", search: { redirect: location.href } })
+      throw redirect({
+        to: "/auth/login",
+        search: { redirect: location.href },
+      })
     }
 
     return { user: context.user } // to make user non-null
