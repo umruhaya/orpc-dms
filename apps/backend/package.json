@@ -34,7 +34,6 @@
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "@repo/contract": "workspace:*",
-    "@repo/domain": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.44.2",

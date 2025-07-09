@@ -29,7 +29,7 @@ const GroceryListsPage = () => {
     status: status || undefined,
   })
 
-  const lists = (data as any)?.items || []
+  const lists = data.items
 
   return (
     <Container fluid p="xl" pt="xl">

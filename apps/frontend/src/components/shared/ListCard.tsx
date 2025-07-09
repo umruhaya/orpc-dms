@@ -1,10 +1,10 @@
-import type { GroceryList } from "@contract/schemas/grocery-list"
-import { Badge, Button, Card, Group, Text } from "@mantine/core"
-import { Link } from "@tanstack/react-router"
+import type { GroceryListEncoded } from "@contract/schemas/grocery-list"
+import { Badge, Card, Group, Text } from "@mantine/core"
 import { Clock } from "lucide-react"
+import LinkBtn from "../layout/LinkBtn"
 
 type ListCardProps = {
-  list: GroceryList
+  list: GroceryListEncoded
 }
 
 export const ListCard = ({ list }: ListCardProps) => {
@@ -37,14 +37,9 @@ export const ListCard = ({ list }: ListCardProps) => {
           </Text>
         </Group>
         <Group gap="xs">
-          <Button
-            component={Link}
-            size="xs"
-            to={`/lists/${list.id}`}
-            variant="light"
-          >
+          <LinkBtn size="xs" to={`/lists/${list.id}`} variant="light">
             View
-          </Button>
+          </LinkBtn>
         </Group>
       </Group>
     </Card>

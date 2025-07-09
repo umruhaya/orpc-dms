@@ -7,6 +7,13 @@ import { Schema as S } from "effect"
 
 const list = GroceryListSchema.pipe(S.omit("ownerId"))
 export type GroceryList = S.Schema.Encoded<typeof list>
+export type GroceryListEncoded = Omit<
+  GroceryList,
+  "createdAt" | "updatedAt"
+> & {
+  createdAt: number | string
+  updatedAt: number | string
+}
 
 export const GetListsParamsSchema = PaginationParamsSchema.pipe(
   S.extend(

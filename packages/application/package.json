@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "@carbonteq/fp": "catalog:",
-    "@repo/domain": "workspace:*",
     "zod": "catalog:",
     "effect": "catalog:",
     "tsyringe": "catalog:"

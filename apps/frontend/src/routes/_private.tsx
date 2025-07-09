@@ -1,6 +1,6 @@
 import LogoutBtn from "@app/components/auth/LogoutBtn"
 import NavigationLink from "@app/components/layout/NavigationLink"
-import { AppShell, Box, Group, NavLink, Stack, Text } from "@mantine/core"
+import { AppShell, Box, Group, Stack, Text } from "@mantine/core"
 import {
   createFileRoute,
   Outlet,

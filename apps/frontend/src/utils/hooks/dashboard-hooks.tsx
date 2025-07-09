@@ -13,7 +13,7 @@ export const recentListsQueryOptions = (orpcClient: typeof OrpcType) => {
       page: 1,
       sinceMs: 3 * 24 * 60 * 60 * 1000, // Last 3 days in milliseconds
     },
-    select: (data: any) => data.items,
+    select: (data) => data.items,
   })
 }
 

@@ -1,7 +1,6 @@
 import LinkBtn from "@app/components/layout/LinkBtn"
-import { Button, Card, Group, Title } from "@mantine/core"
-import { Link } from "@tanstack/react-router"
-import { List, Plus } from "lucide-react"
+import { Card, Group, Title } from "@mantine/core"
+import { Plus } from "lucide-react"
 
 export const QuickActions = () => {
   return (
