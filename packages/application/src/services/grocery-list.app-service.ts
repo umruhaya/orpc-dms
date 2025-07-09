@@ -14,6 +14,7 @@ import {
   type UserEntity,
   type ValidationError,
 } from "@repo/domain"
+import { DateTime as DT } from "effect"
 import { autoInjectable } from "tsyringe"
 
 export type { GetListsParamsType }
@@ -41,11 +42,18 @@ export class GroceryListAppService {
     user: UserEntity,
     filters: GetListsParamsType,
   ): Promise<Result<PaginatedResult<GroceryListEncoded>, ValidationError>> {
+    const since = filters.sinceMs
+      ? new Date(
+          DT.unsafeNow().pipe(DT.subtract({ millis: filters.sinceMs }))
+            .epochMillis,
+        )
+      : undefined
+
     const repoFilters: GroceryListFindFilters = {
       userId: user.id,
       search: filters.search,
       status: filters.status,
-      since: filters.since ? new Date(filters.since.epochMillis) : undefined,
+      since,
       page: filters.page,
       limit: filters.limit,
       sortBy: filters.sortBy,
