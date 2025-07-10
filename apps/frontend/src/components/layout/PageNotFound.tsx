@@ -1,7 +1,7 @@
 import { Box, Container, Group, Text, Title } from "@mantine/core"
 import LinkBtn from "./LinkBtn"
 
-const NotFound = () => {
+const PageNotFound = () => {
   return (
     <Container py="md">
       <Box pos="relative">
@@ -25,4 +25,4 @@ const NotFound = () => {
   )
 }
 
-export default NotFound
+export default PageNotFound

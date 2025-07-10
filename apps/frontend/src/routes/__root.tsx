@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 
 import DefaultErrorBoundary from "@app/components/layout/DefaultErrorBoundary"
-import NotFound from "@app/components/layout/NotFound"
-import FullPageLoader from "@app/components/layout/PageLoader"
+import PageNotFound from "@app/components/layout/PageNotFound"
+import { PageSuspenseFallback } from "@app/components/layout/PageSuspenseFallback"
 import type { OrpcReactQuery } from "@app/shared/orpc"
 import { seo } from "@app/shared/seo"
 import { getCachedAuthSession } from "@app/shared/session-cache"
@@ -67,7 +67,7 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => {
 const RootComponent = () => {
   return (
     <RootDocument>
-      <Suspense fallback={<FullPageLoader />}>
+      <Suspense fallback={<PageSuspenseFallback />}>
         <Outlet />
       </Suspense>
     </RootDocument>
@@ -76,7 +76,7 @@ const RootComponent = () => {
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
-  notFoundComponent: () => <NotFound />,
+  notFoundComponent: () => <PageNotFound />,
   errorComponent: (props) => (
     <RootDocument>
       <DefaultErrorBoundary {...props} />
