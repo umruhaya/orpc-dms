@@ -1,5 +1,6 @@
-import { authClient } from "@app/utils/auth-client"
-import { toast } from "@app/utils/toast"
+import { authClient } from "@app/shared/auth-client"
+import { useInvalidateSession } from "@app/shared/session-cache"
+import { toast } from "@app/shared/toast"
 import { Button } from "@mantine/core"
 import { LogOutIcon } from "lucide-react"
 import { memo, useState } from "react"
@@ -10,6 +11,7 @@ type LogoutBtnProps = {
 
 const LogoutBtn = ({ onLogoutSuccess }: LogoutBtnProps) => {
   const [loggingOut, setLoggingOut] = useState(false)
+  const invalidateSession = useInvalidateSession()
 
   const handleClick = async () => {
     setLoggingOut(true)
@@ -22,6 +24,8 @@ const LogoutBtn = ({ onLogoutSuccess }: LogoutBtnProps) => {
         message: signOutRes.error.message,
       })
     } else {
+      // clear session cache after logout
+      invalidateSession()
       await onLogoutSuccess()
     }
   }

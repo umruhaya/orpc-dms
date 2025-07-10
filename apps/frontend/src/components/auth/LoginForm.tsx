@@ -1,7 +1,8 @@
-import { authClient } from "@app/utils/auth-client"
-import { useAppForm } from "@app/utils/hooks/app-form"
-import { toast } from "@app/utils/toast"
+import { authClient, sessionQueryKey } from "@app/shared/auth-client"
+import { useAppForm } from "@app/shared/hooks/app-form"
+import { toast } from "@app/shared/toast"
 import { Card, Divider, Stack, Text, Title } from "@mantine/core"
+import { useQueryClient } from "@tanstack/react-query"
 import { type } from "arktype"
 import AnchorLink from "../layout/AnchorLink"
 
@@ -13,6 +14,8 @@ type LoginFormProps = {
 }
 
 const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
+  const queryClient = useQueryClient()
+
   const form = useAppForm({
     defaultValues: { email: "", password: "" },
     validators: { onSubmit: formSchema },
@@ -29,6 +32,8 @@ const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
           title: res.error.statusText,
         })
       } else {
+        // Invalidate session cache to trigger refetch with new session
+        queryClient.invalidateQueries({ queryKey: sessionQueryKey })
         toast.success({ message: "Login successful" })
         await onLoginSuccess()
       }

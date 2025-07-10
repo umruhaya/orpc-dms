@@ -1,4 +1,4 @@
-import { useRecentLists } from "../../../utils/hooks/dashboard-hooks"
+import { useRecentLists } from "../../../shared/hooks/dashboard-hooks"
 import { RecentLists } from "./RecentLists"
 import { RecentListsEmpty } from "./RecentListsEmpty"
 

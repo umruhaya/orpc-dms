@@ -8,7 +8,7 @@ import {
 import {
   dashboardStatsQueryOptions,
   recentListsQueryOptions,
-} from "../../utils/hooks/dashboard-hooks"
+} from "../../shared/hooks/dashboard-hooks"
 
 const Home = () => {
   const { user } = Route.useRouteContext()

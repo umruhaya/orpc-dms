@@ -12,28 +12,32 @@ export const authClient = createAuthClient({
   },
 })
 
+const fetchSession = async (headers?: Record<string, string>) => {
+  const res = await authClient.getSession({
+    fetchOptions: headers ? { headers } : undefined,
+  })
+  return res.data || null
+}
+
 // Due to SSR, we need a way to fetch the session on both client and server.
 // The server session fetch is being passed headers to access the cookies.
 export const getAuthSession = createIsomorphicFn()
   .client(async () => {
-    const res = await authClient.getSession()
-
-    const session = res.data || null
-
+    const session = await fetchSession()
     return { session }
   })
   .server(async () => {
     const headers = getHeaders()
-
-    const res = await authClient.getSession({
-      // @ts-expect-error: bad types, description says object literal is fine
-      fetchOptions: { headers },
-    })
-
-    const session = res.data || null
-
+    // @ts-expect-error Header type mismatch between the libraries
+    const session = await fetchSession(headers)
     return { session }
   })
+
+export const useAuthSession = () => {
+  return authClient.useSession()
+}
+
+export const sessionQueryKey = ["auth", "session"] as const
 
 export type AppSession = typeof authClient.$Infer.Session
 // type ErrorCode = keyof typeof authClient.$ERROR_CODES

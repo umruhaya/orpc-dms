@@ -1,4 +1,4 @@
-import { useDashboardStats } from "../../../utils/hooks/dashboard-hooks"
+import { useDashboardStats } from "../../../shared/hooks/dashboard-hooks"
 import { DashboardStats } from "./DashboardStats"
 
 export const DashboardStatsContainer = () => {

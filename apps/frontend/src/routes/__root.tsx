@@ -3,9 +3,9 @@
 import DefaultErrorBoundary from "@app/components/layout/DefaultErrorBoundary"
 import NotFound from "@app/components/layout/NotFound"
 import FullPageLoader from "@app/components/layout/PageLoader"
-import { getAuthSession } from "@app/utils/auth-client"
-import type { OrpcReactQuery } from "@app/utils/orpc"
-import { seo } from "@app/utils/seo"
+import type { OrpcReactQuery } from "@app/shared/orpc"
+import { seo } from "@app/shared/seo"
+import { getCachedAuthSession } from "@app/shared/session-cache"
 import {
   ColorSchemeScript,
   MantineProvider,
@@ -82,10 +82,10 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       <DefaultErrorBoundary {...props} />
     </RootDocument>
   ),
-  beforeLoad: async () => {
+  beforeLoad: async ({ context }) => {
     // This function will execute before every page load, and on a page transition with SSR.
-    // However, better-auth is using the current cookies to prevent an unnecessary request to the backend
-    const res = await getAuthSession()
+    // Using React Query cache to reduce session calls, change staleTime if required
+    const res = await getCachedAuthSession(context.queryClient)
     const user = res.session?.user || null
 
     return { user }

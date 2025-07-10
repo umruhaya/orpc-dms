@@ -15,7 +15,7 @@ import { useDebouncedValue } from "@mantine/hooks"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { Plus, Search } from "lucide-react"
 import { useState } from "react"
-import { listsQueryOptions, useLists } from "../../utils/hooks/lists-hooks"
+import { listsQueryOptions, useLists } from "../../shared/hooks/lists-hooks"
 
 const GroceryListsPage = () => {
   const [search, setSearch] = useState("")
