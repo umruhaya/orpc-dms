@@ -3,9 +3,9 @@
 import DefaultErrorBoundary from "@app/components/layout/DefaultErrorBoundary"
 import PageNotFound from "@app/components/layout/PageNotFound"
 import { PageSuspenseFallback } from "@app/components/layout/PageSuspenseFallback"
+import { prefetchAuthSession } from "@app/shared/hooks/auth-hooks"
 import type { OrpcReactQuery } from "@app/shared/orpc"
 import { seo } from "@app/shared/seo"
-import { getCachedAuthSession } from "@app/shared/session-cache"
 import {
   ColorSchemeScript,
   MantineProvider,
@@ -44,19 +44,12 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => {
           {children}
           <Notifications />
         </MantineProvider>
-        {import.meta.env.DEV ? (
-          <>
-            <ReactQueryDevtools
-              buttonPosition="bottom-right"
-              initialIsOpen={false}
-              position="bottom"
-            />
-            <TanStackRouterDevtools
-              initialIsOpen={false}
-              position="top-right"
-            />
-          </>
-        ) : null}
+        <ReactQueryDevtools
+          buttonPosition="bottom-right"
+          initialIsOpen={false}
+          position="bottom"
+        />
+        <TanStackRouterDevtools initialIsOpen={false} position="top-right" />
         <Scripts />
         <ColorSchemeScript defaultColorScheme="dark" />
       </body>
@@ -85,8 +78,9 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   beforeLoad: async ({ context }) => {
     // This function will execute before every page load, and on a page transition with SSR.
     // Using React Query cache to reduce session calls, change staleTime if required
-    const res = await getCachedAuthSession(context.queryClient)
-    const user = res.session?.user || null
+    const res = await prefetchAuthSession(context.queryClient)
+    console.debug("user is", res?.user)
+    const user = res?.user || null
 
     return { user }
   },

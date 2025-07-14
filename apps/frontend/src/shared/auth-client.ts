@@ -37,7 +37,5 @@ export const useAuthSession = () => {
   return authClient.useSession()
 }
 
-export const sessionQueryKey = ["auth", "session"] as const
-
 export type AppSession = typeof authClient.$Infer.Session
 // type ErrorCode = keyof typeof authClient.$ERROR_CODES

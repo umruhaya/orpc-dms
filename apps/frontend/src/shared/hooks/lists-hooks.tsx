@@ -1,5 +1,5 @@
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { type orpc as OrpcType, orpc } from "../orpc"
+import { type QueryClient, useSuspenseQuery } from "@tanstack/react-query"
+import { orpc } from "../orpc"
 
 type Params = {
   limit?: number
@@ -8,11 +8,8 @@ type Params = {
   status?: "active" | "inactive"
 }
 
-export const listsQueryOptions = (
-  orpcClient: typeof OrpcType,
-  params: Params = {},
-) => {
-  return orpcClient.authenticated.groceryList.getLists.queryOptions({
+const listsQueryOptions = (params: Params = {}) => {
+  return orpc.authenticated.groceryList.getLists.queryOptions({
     input: {
       limit: 50,
       page: 1,
@@ -23,5 +20,17 @@ export const listsQueryOptions = (
   })
 }
 
+const listQueryOptions = (id: string) =>
+  orpc.authenticated.groceryList.getListById.queryOptions({
+    input: { params: { id } },
+  })
+
+export const prefetchList = (queryClient: QueryClient, id: string) =>
+  queryClient.ensureQueryData(listQueryOptions(id))
+export const useList = (id: string) => useSuspenseQuery(listQueryOptions(id))
+
+export const prefetchLists = (queryClient: QueryClient, params: Params = {}) =>
+  queryClient.ensureQueryData(listsQueryOptions(params))
+
 export const useLists = (params: Params = {}) =>
-  useSuspenseQuery(listsQueryOptions(orpc, params))
+  useSuspenseQuery(listsQueryOptions(params))

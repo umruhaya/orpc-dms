@@ -1,5 +1,5 @@
 import { ListCard } from "@app/components/shared/ListCard"
-import type { GroceryList } from "@contract/schemas/grocery-list"
+import type { GroceryListEncoded } from "@contract/schemas/grocery-list"
 import {
   Button,
   Container,
@@ -15,7 +15,7 @@ import { useDebouncedValue } from "@mantine/hooks"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { Plus, Search } from "lucide-react"
 import { useState } from "react"
-import { listsQueryOptions, useLists } from "../../shared/hooks/lists-hooks"
+import { prefetchLists, useLists } from "../../../shared/hooks/lists-hooks"
 
 const GroceryListsPage = () => {
   const [search, setSearch] = useState("")
@@ -91,7 +91,7 @@ const GroceryListsPage = () => {
           </Stack>
         ) : (
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-            {lists.map((list: GroceryList) => (
+            {lists.map((list: GroceryListEncoded) => (
               <ListCard key={list.id} list={list} />
             ))}
           </SimpleGrid>
@@ -101,17 +101,16 @@ const GroceryListsPage = () => {
   )
 }
 
-export const Route = createFileRoute("/_private/lists")({
+export const Route = createFileRoute("/_private/lists/")({
   component: GroceryListsPage,
   head: () => ({ meta: [{ title: "All Lists" }] }),
   loader: async ({ context }) => {
-    const { queryClient, orpc } = context
+    const { queryClient } = context
 
-    await queryClient.ensureQueryData(
-      listsQueryOptions(orpc, {
-        limit: 50,
-        page: 1,
-      }),
-    )
+    await prefetchLists(queryClient, {
+      limit: 5,
+      page: 1,
+      search: "",
+    })
   },
 })

@@ -1,8 +1,7 @@
-import { authClient, sessionQueryKey } from "@app/shared/auth-client"
 import { useAppForm } from "@app/shared/hooks/app-form"
+import { useLoginMutation } from "@app/shared/hooks/auth-hooks"
 import { toast } from "@app/shared/toast"
 import { Card, Divider, Stack, Text, Title } from "@mantine/core"
-import { useQueryClient } from "@tanstack/react-query"
 import { type } from "arktype"
 import AnchorLink from "../layout/AnchorLink"
 
@@ -10,33 +9,27 @@ const formSchema = type({ email: "string.email", password: "string" })
 
 type LoginFormProps = {
   onLoginSuccess: () => Promise<void>
-  // loginFn: () => Promise<void>
 }
 
 const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
-  const queryClient = useQueryClient()
+  const loginMut = useLoginMutation()
 
   const form = useAppForm({
     defaultValues: { email: "", password: "" },
     validators: { onSubmit: formSchema },
 
     onSubmit: async ({ value }) => {
-      const res = await authClient.signIn.email({
-        email: value.email,
-        password: value.password,
+      console.debug("Submitting login form with values:", value)
+      await loginMut.mutateAsync(value, {
+        onError: (err) => {
+          console.error(err)
+          toast.error({ message: err.message, title: err.name })
+        },
+        onSuccess: async () => {
+          console.debug("Login successful, redirecting...")
+          await onLoginSuccess()
+        },
       })
-
-      if (res.error) {
-        toast.error({
-          message: res.error.message,
-          title: res.error.statusText,
-        })
-      } else {
-        // Invalidate session cache to trigger refetch with new session
-        queryClient.invalidateQueries({ queryKey: sessionQueryKey })
-        toast.success({ message: "Login successful" })
-        await onLoginSuccess()
-      }
     },
   })
 
