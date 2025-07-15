@@ -1,7 +1,7 @@
 import { authClient, getAuthSession } from "@app/shared/auth-client"
 import { toast } from "@app/shared/toast"
 import {
-  QueryClient,
+  type QueryClient,
   useMutation,
   useQuery,
   useQueryClient,
@@ -11,8 +11,8 @@ const SESSION_KEY = ["auth", "session"] as const
 export const useInvalidateSession = () => {
   const queryClient = useQueryClient()
 
-  return async () => {
-    await queryClient.invalidateQueries({
+  return () => {
+    queryClient.removeQueries({
       queryKey: SESSION_KEY,
     })
   }
@@ -41,6 +41,12 @@ type LoginData = {
   password: string
 }
 
+type RegisterData = {
+  name: string
+  email: string
+  password: string
+}
+
 export const useLoginMutation = () => {
   const { refetch } = useAuthSession()
 
@@ -53,12 +59,40 @@ export const useLoginMutation = () => {
       })
 
       if (res.error) {
+        console.error(res.error)
         toast.error({
           message: res.error.message,
-          title: res.error.statusText,
+          title: res.error.statusText || "Login failed",
         })
       } else {
         toast.success({ message: "Login successful" })
+        await refetch()
+      }
+
+      return res
+    },
+  })
+}
+
+export const useRegisterMutation = () => {
+  const { refetch } = useAuthSession()
+
+  return useMutation({
+    mutationFn: async (data: RegisterData) => {
+      const res = await authClient.signUp.email({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      })
+
+      if (res.error) {
+        console.error(res.error)
+        toast.error({
+          message: res.error.message,
+          title: res.error.code || "Registration failed",
+        })
+      } else {
+        toast.success({ message: "Registration successful" })
         await refetch()
       }
 
@@ -84,8 +118,10 @@ export const useLogoutMutation = () => {
           message: "Logged out successfully",
         })
 
-        await invalidateSession()
+        invalidateSession()
       }
+
+      return res
     },
   })
 }

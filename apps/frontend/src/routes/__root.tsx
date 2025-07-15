@@ -79,7 +79,6 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     // This function will execute before every page load, and on a page transition with SSR.
     // Using React Query cache to reduce session calls, change staleTime if required
     const res = await prefetchAuthSession(context.queryClient)
-    console.debug("user is", res?.user)
     const user = res?.user || null
 
     return { user }

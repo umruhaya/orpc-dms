@@ -1,5 +1,4 @@
-import { authClient } from "@app/shared/auth-client"
-import { useInvalidateSession } from "@app/shared/session-cache"
+import { useLogoutMutation } from "@app/shared/hooks/auth-hooks"
 import { toast } from "@app/shared/toast"
 import { Button } from "@mantine/core"
 import { LogOutIcon } from "lucide-react"
@@ -11,23 +10,27 @@ type LogoutBtnProps = {
 
 const LogoutBtn = ({ onLogoutSuccess }: LogoutBtnProps) => {
   const [loggingOut, setLoggingOut] = useState(false)
-  const invalidateSession = useInvalidateSession()
+  const logoutMut = useLogoutMutation()
 
   const handleClick = async () => {
     setLoggingOut(true)
-    const signOutRes = await authClient.signOut()
-    setLoggingOut(false)
 
-    if (signOutRes.error) {
-      toast.error({
-        title: "Failed to logout",
-        message: signOutRes.error.message,
-      })
-    } else {
-      // clear session cache after logout
-      invalidateSession()
-      await onLogoutSuccess()
-    }
+    await logoutMut.mutateAsync(undefined, {
+      onError: (err) => {
+        toast.error({
+          title: "Logout failed",
+          message: err.message,
+        })
+      },
+      onSuccess: async (res) => {
+        if (res.data?.success) {
+          await onLogoutSuccess()
+        }
+      },
+      onSettled: () => {
+        setLoggingOut(false)
+      },
+    })
   }
 
   return (

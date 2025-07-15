@@ -14,7 +14,9 @@ export const authClient = createAuthClient({
 
 const fetchSession = async (headers?: Record<string, string>) => {
   const res = await authClient.getSession({
-    fetchOptions: headers ? { headers } : undefined,
+    fetchOptions: headers
+      ? { headers, credentials: "include" }
+      : { credentials: "include" },
   })
   return res.data || null
 }

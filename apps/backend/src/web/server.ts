@@ -12,6 +12,7 @@ import { initAuthRouter } from "./router/auth"
 import config from "@/infra/config"
 import { addOpenApiDocs } from "./utils/openapidocs.handler"
 import { wireDi } from "@/infra/di"
+import { CORS_TRUSTED_ORIGINS } from "@/constants"
 
 wireDi()
 
@@ -20,22 +21,8 @@ app.use(logger())
 app.use(
   "/*",
   cors({
-    origin: [
-      config.app.TRUSTED_ORIGIN,
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://127.0.0.1:3000",
-      "http://127.0.0.1:3001",
-    ],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: [
-      "Content-Type",
-      "Authorization",
-      "Cookie",
-      "Set-Cookie",
-      "X-Requested-With",
-      "Accept",
-    ],
+    origin: CORS_TRUSTED_ORIGINS,
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
     credentials: true,
     exposeHeaders: ["Set-Cookie"],
   }),

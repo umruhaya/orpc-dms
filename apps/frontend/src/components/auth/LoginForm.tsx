@@ -19,15 +19,15 @@ const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
     validators: { onSubmit: formSchema },
 
     onSubmit: async ({ value }) => {
-      console.debug("Submitting login form with values:", value)
       await loginMut.mutateAsync(value, {
         onError: (err) => {
           console.error(err)
           toast.error({ message: err.message, title: err.name })
         },
-        onSuccess: async () => {
-          console.debug("Login successful, redirecting...")
-          await onLoginSuccess()
+        onSuccess: async (data) => {
+          if (data.data) {
+            await onLoginSuccess()
+          }
         },
       })
     },

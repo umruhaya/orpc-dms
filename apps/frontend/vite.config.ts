@@ -6,7 +6,7 @@ import tsConfigPaths from "vite-tsconfig-paths"
 
 const cssTransformer = "lightningcss" as const
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
   return {
     // Native plugins mess with css for now
     // experimental: { enableNativePlugin: true },
@@ -14,6 +14,12 @@ export default defineConfig(() => {
     css: { transformer: cssTransformer }, // might cause issues for postcss specific stuff
     build: { cssMinify: cssTransformer },
     dev: {},
+    server: {
+      cors: mode === "development",
+      host: "0.0.0.0",
+      port: 3000,
+      allowedHosts: mode === "development" ? true : undefined,
+    },
     // oxc: {},
     plugins: [
       tsConfigPaths({ projects: ["./tsconfig.json"] }),

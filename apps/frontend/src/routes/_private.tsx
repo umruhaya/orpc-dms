@@ -16,7 +16,7 @@ const PrivateLayout = () => {
 
   // test: Do we need the useCallback here?
   const handleLogout = useCallback(async () => {
-    router.invalidate().finally(() => {
+    return router.invalidate().finally(() => {
       navigate({ to: "/auth/login" })
     })
   }, [navigate, router])
