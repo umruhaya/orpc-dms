@@ -1,4 +1,6 @@
-import { GroceryListSchema } from "@domain/entities/grocery-list.entity"
+import { GroceryListSchema } from "@domain/grocery-list/grocery-list.entity"
+import { ItemSchema } from "@domain/grocery-list-item/item.entity"
+import { UserSchema } from "@domain/user/user.entity"
 import {
   PaginatedResultSchema,
   PaginationParamsSchema,
@@ -6,9 +8,8 @@ import {
 import { Schema as S } from "effect"
 
 const list = GroceryListSchema.pipe(S.omit("ownerId"))
-export type GroceryList = S.Schema.Encoded<typeof list>
 export type GroceryListEncoded = Omit<
-  GroceryList,
+  S.Schema.Encoded<typeof list>,
   "createdAt" | "updatedAt"
 > & {
   createdAt: number | string
@@ -27,13 +28,25 @@ export const GetListsParamsSchema = PaginationParamsSchema.pipe(
 
 export const GetListsResultSchema = PaginatedResultSchema(list)
 
-export const DashboardStatsSchema = S.Struct({
-  totalLists: S.Number,
-  recentLists: S.Number,
-  pendingItems: S.Number,
-  completedToday: S.Number,
-})
+export const GroceryListDetailsSchema = GroceryListSchema.pipe(
+  S.omit("ownerId"),
+  S.extend(
+    S.Struct({
+      owner: UserSchema,
+      items: S.Array(ItemSchema),
+      stats: S.Struct({
+        totalItems: S.Number,
+        pendingItems: S.Number,
+        completedItems: S.Number,
+        completionPercentage: S.Number,
+      }),
+    }),
+  ),
+)
+
+export type GroceryListDetails = S.Schema.Encoded<
+  typeof GroceryListDetailsSchema
+>
 
 export type GetListsParams = S.Schema.Encoded<typeof GetListsParamsSchema>
 export type GetListsResult = S.Schema.Encoded<typeof GetListsResultSchema>
-export type DashboardStats = S.Schema.Encoded<typeof DashboardStatsSchema>

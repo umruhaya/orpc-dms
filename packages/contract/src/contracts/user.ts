@@ -1,5 +1,5 @@
 import { appAuthenticatedBase } from "@contract/utils/oc.base"
-import type { UserEncoded } from "@domain/entities/user.entity"
+import type { UserEncoded } from "@domain/user/user.entity"
 import { type } from "@orpc/contract"
 
 const userBase = appAuthenticatedBase
@@ -11,7 +11,7 @@ export const whoami = userBase
     summary: "Get current user",
     tags: ["user"],
   })
-  .input(type<void>()) // No input required
+  .input(type<void>())
   .output(type<UserEncoded>())
 
 export default { whoami }

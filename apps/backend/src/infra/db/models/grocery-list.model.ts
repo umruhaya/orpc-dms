@@ -1,6 +1,6 @@
-import type { GroceryListType } from "@domain/entities/grocery-list.entity"
-import type { ItemType } from "@domain/entities/item.entity"
-import type { UserType } from "@domain/entities/user.entity"
+import type { GroceryListType } from "@domain/grocery-list/grocery-list.entity"
+import type { ItemType } from "@domain/grocery-list-item/item.entity"
+import type { UserType } from "@domain/user/user.entity"
 import { relations } from "drizzle-orm"
 import {
   boolean,
@@ -43,7 +43,7 @@ export const groceryListItems = pgTable("grocery_list_items", {
   notes: text("notes"),
   createdBy: uuid("created_by")
     .$type<UserId>()
-    // .notNull()
+    .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
 })
 

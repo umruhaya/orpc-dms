@@ -22,10 +22,9 @@ describe("DateTime Union Deduplication", () => {
         "A date and time value, accepts multiple formats: Unix timestamp (number), ISO string, or Date object",
     })
 
-    // Verify we only have 2 items instead of the original 4
     expect(result.oneOf).toHaveLength(2)
 
-    // Verify we have exactly one number type and one string type
+    // @ts-expect-error bad types
     const types = result.oneOf?.map((item) => item.type) || []
     expect(types).toEqual(["number", "string"])
   })

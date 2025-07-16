@@ -1,5 +1,5 @@
 import { Result } from "@carbonteq/fp"
-import { UserEntity } from "@domain/entities/user.entity"
+import { UserEntity } from "@domain/user/user.entity"
 import { UnauthorizedError } from "@domain/utils/base.errors"
 import type { ParseError } from "effect/ParseResult"
 import { injectable } from "tsyringe"

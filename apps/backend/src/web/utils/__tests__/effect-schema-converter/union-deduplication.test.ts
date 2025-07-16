@@ -40,6 +40,7 @@ describe("Union Type Deduplication", () => {
     const result = convertEffectSchemaToOpenAPI(schema)
 
     expect(result.oneOf).toHaveLength(4) // All different core types
+    // @ts-expect-error bad types
     const types = result.oneOf?.map((item) => item.type) || []
     expect(types).toEqual(["string", "number", "boolean", "array"])
   })

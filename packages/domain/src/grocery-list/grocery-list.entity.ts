@@ -1,11 +1,11 @@
 import type { Result } from "@carbonteq/fp"
 import { Result as R } from "@carbonteq/fp"
-import { GroceryListOwnershipError } from "@domain/errors/grocery-list.errors"
+import type { UserType } from "@domain/user/user.entity"
 import { BaseEntity, defineEntityStruct } from "@domain/utils/base.entity"
 import { DateTime, UUID } from "@domain/utils/refined-types"
 import { createEncoderDecoderBridge } from "@domain/utils/schema-utils"
 import { Schema as S } from "effect"
-import type { UserType } from "./user.entity"
+import { GroceryListOwnershipError } from "./grocery-list.errors"
 
 export const GroceryListId = UUID.pipe(S.brand("GroceryListId"))
 export const GroceryListSchema = defineEntityStruct({
@@ -26,7 +26,6 @@ export const GroceryListUpdateSchema = S.partialWith(
 )
 
 export type GroceryListType = S.Schema.Type<typeof GroceryListSchema>
-export type GroceryListEncoded = S.Schema.Encoded<typeof GroceryListSchema>
 export type GroceryListUpdateData = S.Schema.Type<
   typeof GroceryListUpdateSchema
 >
@@ -74,7 +73,7 @@ export class GroceryListEntity extends BaseEntity implements GroceryListType {
     return new GroceryListEntity(data)
   }
 
-  static fromEncoded(data: GroceryListEncoded) {
+  static fromEncoded(data: S.Schema.Encoded<typeof GroceryListSchema>) {
     return bridge.deserialize(data).map((d) => new GroceryListEntity(d))
   }
 
@@ -82,24 +81,14 @@ export class GroceryListEntity extends BaseEntity implements GroceryListType {
     return this.ownerId === userId
   }
 
-  ensureIsOwner(
-    userId: UserType["id"],
-  ): Result<void, GroceryListOwnershipError> {
-    if (!this.isOwner(userId)) {
+  ensureIsOwner(user: UserType): Result<void, GroceryListOwnershipError> {
+    if (!this.isOwner(user.id)) {
       return R.Err(new GroceryListOwnershipError(this.id))
     }
     return R.Ok(undefined)
   }
 
   serialize() {
-    return bridge.serialize({
-      id: this.id,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      name: this.name,
-      active: this.active,
-      description: this.description,
-      ownerId: this.ownerId,
-    })
+    return bridge.serialize(this)
   }
 }

@@ -5,9 +5,22 @@ import { handleAppResult } from "../utils/result-handler"
 
 const base = authenticated.groceryList
 
-const getListByIdHandler = base.getListById.handler(async () => {
-  throw new Error("Not implemented yet")
-})
+const getListByIdHandler = base.getListById.handler(
+  async ({
+    input: {
+      params: { id },
+    },
+    context,
+  }) => {
+    const groceryListFlows = container.resolve(GroceryListWorkflows)
+    const result = await groceryListFlows.fetchGroceryListDetails(
+      id,
+      context.user,
+    )
+
+    return handleAppResult(result)
+  },
+)
 
 const getStatsHandler = base.getStats.handler(async ({ context }) => {
   const groceryListFlows = container.resolve(GroceryListWorkflows)
@@ -44,6 +57,15 @@ const getListsHandler = base.getLists.handler(
   },
 )
 
+const getRecentListsHandler = base.fetchRecentLists.handler(
+  async ({ context }) => {
+    const groceryListFlows = container.resolve(GroceryListWorkflows)
+    const result = await groceryListFlows.fetchRecentLists(context.user)
+
+    return handleAppResult(result)
+  },
+)
+
 export default base.router({
   getListById: getListByIdHandler,
   getStats: getStatsHandler,
@@ -51,4 +73,5 @@ export default base.router({
   updateGroceryList: updateGroceryHandler,
   deleteGroceryList: deleteGroceryHandler,
   getLists: getListsHandler,
+  fetchRecentLists: getRecentListsHandler,
 })

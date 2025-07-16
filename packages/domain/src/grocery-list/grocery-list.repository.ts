@@ -1,14 +1,12 @@
-import type { Result } from "@carbonteq/fp"
-import type { GroceryListNotFoundError } from "@domain/errors/grocery-list.errors"
+import type { UserType } from "@domain/user/user.entity"
 import type { RepoResult, RepoUnitResult } from "@domain/utils"
-import type { PaginatedResult } from "@domain/utils/pagination.utils"
-import type { ParseError } from "effect/ParseResult"
+import type { Paginated } from "@domain/utils/pagination.utils"
 import type {
   GroceryListEntity,
   GroceryListType,
   GroceryListUpdateData,
-} from "../entities/grocery-list.entity"
-import type { UserType } from "../entities/user.entity"
+} from "./grocery-list.entity"
+import type { GroceryListNotFoundError } from "./grocery-list.errors"
 
 export type GroceryListCountFilters = {
   userId?: UserType["id"]
@@ -42,9 +40,9 @@ export abstract class GroceryListRepository {
   ): Promise<RepoUnitResult<GroceryListNotFoundError>>
   abstract findByUserId(
     userId: UserType["id"],
-  ): Promise<Result<GroceryListEntity[], ParseError[]>>
+  ): Promise<RepoResult<GroceryListEntity[]>>
   abstract findWithFilters(
     filters: GroceryListFindFilters,
-  ): Promise<Result<PaginatedResult<GroceryListEntity>, ParseError[]>>
+  ): Promise<RepoResult<Paginated<GroceryListEntity>>>
   abstract count(filters: GroceryListCountFilters): Promise<number>
 }

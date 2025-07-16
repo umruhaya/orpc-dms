@@ -3,7 +3,7 @@ import type { Result } from "@carbonteq/fp"
 import {
   type GroceryListCreateData,
   GroceryListCreateSchema,
-} from "@domain/entities/grocery-list.entity"
+} from "@domain/grocery-list/grocery-list.entity"
 import type { ValidationError } from "@domain/utils/base.errors"
 
 export class CreateGroceryListDto implements GroceryListCreateData {

@@ -1,5 +1,13 @@
+import { isPromise } from "node:util/types"
 import { Result } from "@carbonteq/fp/result"
 import { Cause, Effect, Either, Option } from "effect"
+import type { ParseError } from "effect/ParseResult"
+import type { ValidationError } from "./base.errors"
+import type { Paginated } from "./pagination.utils"
+import {
+  parseErrorsToValidationError,
+  parseErrorToValidationError,
+} from "./valdidation.utils"
 
 export const eitherToResult = <R, L>(e: Either.Either<R, L>): Result<R, L> =>
   Either.match(e, {
@@ -59,12 +67,33 @@ export const resultToEffect = <T, E>(
 ): Effect.Effect<T, E, never> =>
   r.isOk() ? Effect.succeed(r.unwrap()) : Effect.fail(r.unwrapErr())
 
+function mapParseErrors<T>(results: Result<Promise<T>, ParseError>[]): never
+function mapParseErrors<T>(
+  results: Result<T, ParseError>[],
+): Result<T[], ValidationError>
+function mapParseErrors<T>(results: Result<T, ParseError>[]) {
+  const seq = Result.all(...results)
+
+  return seq.mapErr(parseErrorsToValidationError)
+}
+
 type WithSerialize<T> = {
   serialize: () => T
 }
 
+type WithSerializeResult<T> = {
+  serialize: () => Result<T, ParseError>
+}
+
 export const ResultUtils = {
+  resultToEither,
+  eitherToResult,
+  resultToEffect,
+  effectToResult,
+  effectToResultAsync,
   serialized: <T>(obj: WithSerialize<T>): T => obj.serialize(),
+  encoded: <T>(obj: WithSerializeResult<T>): Result<T, ValidationError> =>
+    obj.serialize().mapErr(parseErrorToValidationError),
   pick:
     <T extends Record<string, unknown>, K extends keyof T, E>(...keys: K[]) =>
     (result: Result<T, E>) => {
@@ -79,9 +108,6 @@ export const ResultUtils = {
       })
     },
 
-  /**
-   * Extract a single key from a Result's value
-   */
   extract:
     <T extends Record<string, unknown>, K extends keyof T, E>(key: K) =>
     (result: Result<T, E>): Result<T[K], E> => {
@@ -93,19 +119,7 @@ export const ResultUtils = {
       })
     },
 
-  /**
-   * Transform a Result's value to a new type
-   */
-  transform:
-    <T, U, E>(fn: (value: T) => U) =>
-    (result: Result<T, E>): Result<U, E> => {
-      return result.map(fn)
-    },
-
-  /**
-   * Apply a function to multiple Results and collect all successful results
-   */
-  collect: <T, E>(results: Result<T, E>[]): Result<T[], E[]> => {
+  collectSuccessful: <T, E>(results: Result<T, E>[]): Result<T[], E[]> => {
     const successes: T[] = []
     const errors: E[] = []
 
@@ -120,29 +134,13 @@ export const ResultUtils = {
     return errors.length === 0 ? Result.Ok(successes) : Result.Err(errors)
   },
 
-  /**
-   * Filter Results, keeping only successful ones
-   */
   filterOk: <T, E>(results: Result<T, E>[]): T[] => {
     return results.filter((r) => r.isOk()).map((r) => r.unwrap())
   },
 
-  /**
-   * Filter Results, keeping only failed ones
-   */
   filterErr: <T, E>(results: Result<T, E>[]): E[] => {
     return results.filter((r) => r.isErr()).map((r) => r.unwrapErr())
   },
-
-  /**
-   * Map over a list with a function that returns Results, collecting all successful results
-   */
-  mapCollect:
-    <T, U, E>(fn: (item: T) => Result<U, E>) =>
-    (items: T[]): Result<U[], E[]> => {
-      const results = items.map(fn)
-      return ResultUtils.collect(results)
-    },
 
   log: <T, E>(result: Result<T, E>, prefix: string = "") => {
     if (result.isOk()) {
@@ -150,5 +148,18 @@ export const ResultUtils = {
     } else {
       console.error(`${prefix} Error:`, result.unwrapErr())
     }
+  },
+  mapParseErrors,
+
+  paginatedSerialize: <T>(r: Paginated<WithSerializeResult<T>>) => {
+    const serializedItems = r.items.map((item) => item.serialize())
+
+    return mapParseErrors(serializedItems).map(
+      (items) =>
+        ({
+          ...r,
+          items,
+        }) satisfies Paginated<T>,
+    )
   },
 } as const

@@ -1,4 +1,4 @@
-import type { UserEntity } from "@domain/entities/user.entity"
+import type { UserEntity } from "@domain/user/user.entity"
 import type { ResponseHeadersPluginContext } from "@orpc/server/plugins"
 import type { AuthContext } from "@/web/utils/auth-context"
 

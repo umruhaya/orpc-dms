@@ -1,5 +1,13 @@
-import { ValidationError, type ValidationIssue } from "@repo/domain"
 import type { ParseError } from "effect/ParseResult"
+import { ValidationError, type ValidationIssue } from "./base.errors"
+
+export const mergeValidationErrors = (
+  errors: ValidationError[],
+): ValidationError => {
+  const issues: ValidationIssue[] = errors.flatMap((err) => err.issues)
+
+  return ValidationError.multiple(issues)
+}
 
 export function parseErrorsToValidationError(
   parseErrors: ParseError[],

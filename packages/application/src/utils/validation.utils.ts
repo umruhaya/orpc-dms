@@ -1,6 +1,6 @@
-import { eitherToResult } from "@domain/index"
+import { eitherToResult } from "@domain/utils/fp-utils"
+import { parseErrorToValidationError } from "@domain/utils/valdidation.utils"
 import { Schema as S } from "effect"
-import { parseErrorToValidationError } from "./validation-error.utils"
 
 export const validateWithEffect = <In, Out>(
   schema: S.Schema<Out, In>,

@@ -28,7 +28,7 @@ export const PaginatedResultSchema = <In, Out>(
     }),
   )
 
-export type PaginatedResult<T> = {
+export type Paginated<T> = {
   items: T[]
   totalCount: number
   page: number
@@ -55,7 +55,7 @@ export const createPaginatedResult = <T>(
   totalCount: number,
   page: number,
   limit: number,
-): PaginatedResult<T> => {
+): Paginated<T> => {
   const totalPages = Math.ceil(totalCount / limit)
 
   return {

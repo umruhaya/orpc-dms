@@ -1,31 +1,43 @@
-import { Result as R, type Result } from "@carbonteq/fp"
+import { Result as R } from "@carbonteq/fp"
 import type {
   GroceryListEntity,
   GroceryListType,
   GroceryListUpdateData,
-} from "@domain/entities/grocery-list.entity"
-import { GroceryListEntity as GList } from "@domain/entities/grocery-list.entity"
-import type { UserType } from "@domain/entities/user.entity"
-import { GroceryListNotFoundError } from "@domain/errors/grocery-list.errors"
+} from "@domain/grocery-list/grocery-list.entity"
+import { GroceryListEntity as GList } from "@domain/grocery-list/grocery-list.entity"
+import { GroceryListNotFoundError } from "@domain/grocery-list/grocery-list.errors"
 import {
   type GroceryListCountFilters,
   type GroceryListFindFilters,
   GroceryListRepository,
-} from "@domain/repositories/grocery-list.repository"
-import type { RepoResult, RepoUnitResult } from "@domain/utils"
+} from "@domain/grocery-list/grocery-list.repository"
+import type { UserType } from "@domain/user/user.entity"
+import { type RepoResult, type RepoUnitResult } from "@domain/utils"
 import {
   calculateOffset,
   createPaginatedResult,
   getDefaultPagination,
-  type PaginatedResult,
+  type Paginated,
 } from "@domain/utils/pagination.utils"
 import { DateTime } from "@domain/utils/refined-types"
 import { and, asc, desc, eq, gte, ilike } from "drizzle-orm"
-import type { ParseError } from "effect/ParseResult"
 import { injectable } from "tsyringe"
 import type { AppDatabase } from "../conn"
 import { InjectDb } from "../conn"
 import { groceryLists } from "../schema"
+import { enhanceEntityMapper } from "./repo.utils"
+
+const mapper = enhanceEntityMapper((row: typeof groceryLists.$inferSelect) =>
+  GList.fromEncoded({
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    ownerId: row.userId,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    active: row.isActive,
+  }),
+)
 
 @injectable()
 export class DrizzleGroceryListRepository extends GroceryListRepository {
@@ -54,7 +66,7 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
         return R.Err(new Error("Failed to create grocery list"))
       }
 
-      return this.mapToEntity(inserted)
+      return mapper.mapOne(inserted)
     } catch (error) {
       return R.Err(error as Error)
     }
@@ -64,18 +76,15 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
     id: GroceryListType["id"],
   ): Promise<RepoResult<GroceryListEntity, GroceryListNotFoundError>> {
     try {
-      const result = await this.db
-        .select()
-        .from(groceryLists)
-        .where(eq(groceryLists.id, id))
-        .limit(1)
+      const row = await this.db.query.groceryLists.findFirst({
+        where: eq(groceryLists.id, id),
+      })
 
-      const row = result[0]
       if (!row) {
         return R.Err(new GroceryListNotFoundError(id))
       }
 
-      return this.mapToEntity(row)
+      return mapper.mapOne(row)
     } catch {
       return R.Err(new GroceryListNotFoundError(id))
     }
@@ -119,21 +128,19 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
 
   async findByUserId(
     userId: UserType["id"],
-  ): Promise<Result<GroceryListEntity[], ParseError[]>> {
-    const results = await this.db
+  ): Promise<RepoResult<GroceryListEntity[]>> {
+    const rows = await this.db
       .select()
       .from(groceryLists)
       .where(eq(groceryLists.userId, userId))
       .orderBy(desc(groceryLists.updatedAt))
 
-    const lists = results.map((row) => this.mapToEntity(row))
-
-    return R.all(...lists)
+    return mapper.mapMany(rows)
   }
 
   async findWithFilters(
     filters: GroceryListFindFilters,
-  ): Promise<Result<PaginatedResult<GroceryListEntity>, ParseError[]>> {
+  ): Promise<RepoResult<Paginated<GroceryListEntity>>> {
     const pagination = getDefaultPagination({
       page: filters.page,
       limit: filters.limit,
@@ -142,24 +149,19 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
 
     const offset = calculateOffset(pagination.page, pagination.limit)
 
-    // Build where conditions
     const conditions = [eq(groceryLists.userId, filters.userId)]
-
     if (filters.search) {
       conditions.push(ilike(groceryLists.name, `%${filters.search}%`))
     }
-
     if (filters.status === "active") {
       conditions.push(eq(groceryLists.isActive, true))
     } else if (filters.status === "inactive") {
       conditions.push(eq(groceryLists.isActive, false))
     }
-
     if (filters.since) {
       conditions.push(gte(groceryLists.updatedAt, filters.since))
     }
 
-    // Build order by
     const orderBy =
       filters.sortBy === "name"
         ? pagination.sortOrder === "asc"
@@ -169,11 +171,9 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
           ? asc(groceryLists.updatedAt)
           : desc(groceryLists.updatedAt)
 
-    // Get total count
     const totalCount = await this.db.$count(groceryLists, and(...conditions))
 
-    // Get paginated results
-    const results = await this.db
+    const rows = await this.db
       .select()
       .from(groceryLists)
       .where(and(...conditions))
@@ -181,9 +181,7 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
       .limit(pagination.limit)
       .offset(offset)
 
-    // Map to entities
-    const listResults = results.map((row) => this.mapToEntity(row))
-    const listsResult = R.all(...listResults)
+    const listsResult = mapper.mapMany(rows)
 
     return listsResult.map((lists) =>
       createPaginatedResult(
@@ -200,24 +198,10 @@ export class DrizzleGroceryListRepository extends GroceryListRepository {
       groceryLists,
       and(
         filters.userId ? eq(groceryLists.userId, filters.userId) : undefined,
-        filters.since ? gte(groceryLists.createdAt, filters.since) : undefined,
+        filters.since ? gte(groceryLists.updatedAt, filters.since) : undefined,
       ),
     )
 
     return c
-  }
-
-  private mapToEntity(
-    row: typeof groceryLists.$inferSelect,
-  ): Result<GroceryListEntity, ParseError> {
-    return GList.fromEncoded({
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      ownerId: row.userId,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      active: row.isActive,
-    })
   }
 }

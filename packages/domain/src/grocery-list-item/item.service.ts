@@ -1,5 +1,5 @@
 import { DateTime as DT } from "effect"
-import type { ItemEntity } from "../entities/item.entity"
+import type { ItemEntity } from "./item.entity"
 
 function sortItemsForDisplay(items: ItemEntity[]): ItemEntity[] {
   return items.sort((a, b) => {

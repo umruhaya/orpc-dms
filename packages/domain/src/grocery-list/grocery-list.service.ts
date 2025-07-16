@@ -1,23 +1,15 @@
-import type { GroceryListEntity } from "../entities/grocery-list.entity"
-import type { ItemEntity } from "../entities/item.entity"
-import type { UserEntity, UserType } from "../entities/user.entity"
+import { Result } from "@carbonteq/fp"
+import { type ItemEntity } from "@domain/grocery-list-item/item.entity"
+import { type UserEntity, type UserType } from "@domain/user/user.entity"
+import type { ValidationError } from "@domain/utils"
+import { ResultUtils } from "@domain/utils/fp-utils"
+import { type GroceryListEntity } from "./grocery-list.entity"
+import type { GroceryListOwnershipError } from "./grocery-list.errors"
+import type { GroceryListDetails } from "./grocery-list.schemas"
 
-export interface GroceryListStats {
-  totalItems: number
-  pendingItems: number
-  completedItems: number
-  completionPercentage: number
-}
-
-export interface GroceryListWithItemsAndOwner {
-  list: GroceryListEntity
-  owner: UserEntity
-  items: ItemEntity[]
-  stats: GroceryListStats
-}
-
+type GroceryListStats = GroceryListDetails["stats"]
 export class GroceryListService {
-  calculateDetailedStats(items: ItemEntity[]): GroceryListStats {
+  static calculateDetailedStats(items: ItemEntity[]): GroceryListStats {
     const totalItems = items.length
     const pendingItems = items.filter((item) => item.isPending()).length
     const completedItems = items.filter((item) => item.isBought()).length
@@ -33,22 +25,40 @@ export class GroceryListService {
     }
   }
 
-  aggregateListView(
+  static processListDetails(
     list: GroceryListEntity,
     owner: UserEntity,
     items: ItemEntity[],
-  ): GroceryListWithItemsAndOwner {
-    const stats = this.calculateDetailedStats(items)
+  ): Result<GroceryListDetails, GroceryListOwnershipError | ValidationError> {
+    const encoded = list
+      .ensureIsOwner(owner)
+      .flatMap((_) => ResultUtils.encoded(list))
+      .flatZip((_) => ResultUtils.encoded(owner))
+      .flatMap(([listEncoded, ownerEncoded]) => {
+        const itemsSerialized = items.map(ResultUtils.serialized)
+        const itemsEncoded = ResultUtils.mapParseErrors(itemsSerialized)
 
-    return {
-      list,
-      owner,
-      items,
-      stats,
-    }
+        return itemsEncoded.map((it) => ({
+          itemsEncoded: it,
+          listEncoded,
+          ownerEncoded,
+        }))
+      })
+      .map(({ itemsEncoded, listEncoded, ownerEncoded }) => {
+        const stats = GroceryListService.calculateDetailedStats(items)
+
+        return {
+          ...listEncoded,
+          items: itemsEncoded,
+          owner: ownerEncoded,
+          stats,
+        } satisfies GroceryListDetails
+      })
+
+    return encoded
   }
 
-  calculateCompletionStatus(
+  static calculateCompletionStatus(
     items: ItemEntity[],
   ):
     | "empty"
@@ -74,33 +84,7 @@ export class GroceryListService {
     }
   }
 
-  organizeItemsForDisplay(items: ItemEntity[]): {
-    pending: ItemEntity[]
-    completed: ItemEntity[]
-    recent: ItemEntity[]
-  } {
-    const pending = items
-      .filter((item) => item.isPending())
-      .sort((a, b) => a.name.localeCompare(b.name))
-
-    const completed = items
-      .filter((item) => item.isBought())
-      .sort((a, b) => a.name.localeCompare(b.name))
-
-    // For recent, we'll sort by creation order (newest first)
-    const recent = items
-      .slice()
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .slice(0, 5)
-
-    return {
-      pending,
-      completed,
-      recent,
-    }
-  }
-
-  validateBulkItemOperation(
+  static validateBulkItemOperation(
     items: ItemEntity[],
     operation: "mark-complete" | "mark-pending" | "delete",
     userId: UserType["id"],

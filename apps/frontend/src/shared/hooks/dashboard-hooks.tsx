@@ -7,13 +7,9 @@ export const dashboardStatsQueryOptions = (orpcClient: typeof OrpcType) => {
 }
 
 export const recentListsQueryOptions = (orpcClient: typeof OrpcType) => {
-  return orpcClient.authenticated.groceryList.getLists.queryOptions({
-    input: {
-      limit: 5,
-      page: 1,
-      sinceMs: 3 * 24 * 60 * 60 * 1000, // Last 3 days in milliseconds
-    },
+  return orpcClient.authenticated.groceryList.fetchRecentLists.queryOptions({
     select: (data) => data.items,
+    retry: 2,
   })
 }
 

@@ -1,4 +1,4 @@
-import type { UserType } from "@domain/entities/user.entity"
+import type { UserType } from "@domain/user/user.entity"
 import { boolean, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
 import { getBaseColumns, getPrimaryKeyCol } from "../db.utils"
 

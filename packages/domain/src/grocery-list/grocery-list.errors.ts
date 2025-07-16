@@ -2,7 +2,7 @@ import {
   ForbiddenError,
   NotFoundError,
   ValidationError,
-} from "../utils/base.errors"
+} from "@domain/utils/base.errors"
 
 export class GroceryListNotFoundError extends NotFoundError {
   override readonly code = "GROCERY_LIST_NOT_FOUND" as const

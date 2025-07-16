@@ -26,19 +26,11 @@ export type BaseEntityType = S.Schema.Type<typeof baseEntityStruct>
 export class BaseEntity implements BaseEntityType {
   readonly id: BaseEntityType["id"]
   readonly createdAt: BaseEntityType["createdAt"]
-  #updatedAt: BaseEntityType["updatedAt"]
+  readonly updatedAt: BaseEntityType["updatedAt"]
 
   protected constructor(data: BaseEntityType) {
     this.id = data.id
     this.createdAt = data.createdAt
-    this.#updatedAt = data.updatedAt
-  }
-
-  get updatedAt() {
-    return this.#updatedAt
-  }
-
-  protected markUpdatedAt() {
-    this.#updatedAt = DateTime.now()
+    this.updatedAt = data.updatedAt
   }
 }

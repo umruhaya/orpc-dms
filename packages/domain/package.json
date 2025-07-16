@@ -45,6 +45,7 @@
   "dependencies": {
     "@carbonteq/fp": "catalog:",
     "zod": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "tsyringe": "catalog:"
   }
 }

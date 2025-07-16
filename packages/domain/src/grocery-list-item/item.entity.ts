@@ -1,15 +1,15 @@
 import type { UnitResult } from "@carbonteq/fp"
 import { Result as R } from "@carbonteq/fp"
 import {
-  ItemListMismatchError,
-  ItemOwnershipError,
-} from "@domain/errors/item.errors"
+  GroceryListId,
+  type GroceryListType,
+} from "@domain/grocery-list/grocery-list.entity"
+import { UserIdSchema, type UserType } from "@domain/user/user.entity"
 import { BaseEntity, defineEntityStruct } from "@domain/utils/base.entity"
-import { UUID } from "@domain/utils/refined-types"
+import { Opt, UUID } from "@domain/utils/refined-types"
 import { createEncoderDecoderBridge } from "@domain/utils/schema-utils"
 import { Schema as S } from "effect"
-import { GroceryListId, type GroceryListType } from "./grocery-list.entity"
-import { UserIdSchema, type UserType } from "./user.entity"
+import { ItemListMismatchError, ItemOwnershipError } from "./item.errors"
 
 export const ItemStatusSchema = S.Literal("pending", "bought")
 
@@ -18,7 +18,7 @@ export const ItemSchema = defineEntityStruct({
   listId: GroceryListId,
   name: S.String.pipe(S.minLength(1)),
   quantity: S.Number.pipe(S.positive()),
-  notes: S.String,
+  notes: Opt(S.String),
   status: ItemStatusSchema,
   createdBy: UserIdSchema,
 })
@@ -44,7 +44,7 @@ export class ItemEntity extends BaseEntity implements ItemType {
   readonly quantity: number
   readonly status: ItemStatus
   readonly createdBy: ItemType["createdBy"]
-  readonly notes: string
+  readonly notes: ItemType["notes"]
 
   private constructor(data: ItemType) {
     super(data)
@@ -106,16 +106,6 @@ export class ItemEntity extends BaseEntity implements ItemType {
   }
 
   serialize() {
-    return bridge.serialize({
-      id: this.id,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      listId: this.listId,
-      name: this.name,
-      notes: this.notes,
-      quantity: this.quantity,
-      status: this.status,
-      createdBy: this.createdBy,
-    })
+    return bridge.serialize(this)
   }
 }

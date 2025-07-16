@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 
 import "reflect-metadata"
-import type { GroceryListType } from "@domain/entities/grocery-list.entity"
-import type { UserType } from "@domain/entities/user.entity"
+import type { GroceryListType } from "@domain/grocery-list/grocery-list.entity"
+import type { UserType } from "@domain/user/user.entity"
 import { eq } from "drizzle-orm"
 import { createDbInstance } from "@/infra/db/conn"
 import {

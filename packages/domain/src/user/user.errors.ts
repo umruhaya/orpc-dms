@@ -1,4 +1,4 @@
-import { NotFoundError, ValidationError } from "../utils/base.errors"
+import { NotFoundError, ValidationError } from "@domain/utils/base.errors"
 
 // User not found error
 export class UserNotFoundError extends NotFoundError {

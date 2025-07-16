@@ -1,5 +1,5 @@
-import { GroceryListRepository } from "@domain/repositories/grocery-list.repository"
-import { ItemRepository } from "@domain/repositories/item.repository"
+import { GroceryListRepository } from "@domain/grocery-list/grocery-list.repository"
+import { ItemRepository } from "@domain/grocery-list-item/item.repository"
 import { container } from "tsyringe"
 import { asImplementation } from "@/infra/di/utils"
 import { DrizzleGroceryListRepository } from "./grocery-list.repository"

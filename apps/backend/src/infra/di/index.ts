@@ -1,9 +1,8 @@
-import { GroceryListAppService } from "@application/services"
 import { GroceryListWorkflows } from "@application/workflows"
 import { container } from "tsyringe"
 import { registerRepositories } from "../db/repos/di"
 
-const services = [GroceryListAppService] as const
+const services = [] as const
 const workflows = [GroceryListWorkflows] as const
 
 export const wireDi = () => {

@@ -1,28 +1,43 @@
-import { Result as R, type Result } from "@carbonteq/fp"
-import type { GroceryListType } from "@domain/entities/grocery-list.entity"
+import { Result as R } from "@carbonteq/fp"
+import type { GroceryListType } from "@domain/grocery-list/grocery-list.entity"
 import type {
   ItemEntity,
   ItemType,
   ItemUpdateDataEncoded,
-} from "@domain/entities/item.entity"
-import { ItemEntity as Item } from "@domain/entities/item.entity"
-import type { UserType } from "@domain/entities/user.entity"
+} from "@domain/grocery-list-item/item.entity"
+import { ItemEntity as Item } from "@domain/grocery-list-item/item.entity"
 import {
   ItemNotFoundError,
   ItemValidationError,
-} from "@domain/errors/item.errors"
+} from "@domain/grocery-list-item/item.errors"
 import {
   type GroceryItemFilters,
   ItemRepository,
-} from "@domain/repositories/item.repository"
-import type { RepoResult } from "@domain/utils"
+} from "@domain/grocery-list-item/item.repository"
+import type { RepoResult, RepoUnitResult } from "@domain/utils"
 import { DateTime } from "@domain/utils/refined-types"
+import { parseErrorToValidationError } from "@domain/utils/valdidation.utils"
 import { and, eq, gte } from "drizzle-orm"
-import type { ParseError } from "effect/ParseResult"
 import { injectable } from "tsyringe"
 import type { AppDatabase } from "../conn"
 import { InjectDb } from "../conn"
 import { groceryListItems } from "../schema"
+import { enhanceEntityMapper } from "./repo.utils"
+
+const mapper = enhanceEntityMapper(
+  (row: typeof groceryListItems.$inferSelect) =>
+    Item.fromEncoded({
+      id: row.id,
+      listId: row.listId,
+      name: row.name,
+      quantity: row.quantity,
+      status: row.status,
+      createdBy: row.createdBy,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      notes: row.notes,
+    }),
+)
 
 @injectable()
 export class DrizzleItemRepository extends ItemRepository {
@@ -30,13 +45,11 @@ export class DrizzleItemRepository extends ItemRepository {
     super()
   }
 
-  async create(
-    item: ItemEntity,
-  ): Promise<RepoResult<ItemEntity, ItemValidationError>> {
+  async create(item: ItemEntity): Promise<RepoResult<ItemEntity>> {
     const encoded = item.serialize()
 
     if (encoded.isErr()) {
-      return encoded
+      return encoded.mapErr(parseErrorToValidationError)
     }
     const data = encoded.unwrap()
 
@@ -58,7 +71,7 @@ export class DrizzleItemRepository extends ItemRepository {
       return R.Err(new ItemValidationError("Failed to create item"))
     }
 
-    return this.mapToEntity(inserted)
+    return mapper.mapOne(inserted)
   }
 
   async findById(
@@ -72,29 +85,18 @@ export class DrizzleItemRepository extends ItemRepository {
       return R.Err(new ItemNotFoundError(id))
     }
 
-    return this.mapToEntity(result)
+    return mapper.mapOne(result)
   }
 
-  async findByListId(listId: GroceryListType["id"]): Promise<ItemEntity[]> {
+  async findByList(list: GroceryListType): Promise<RepoResult<ItemEntity[]>> {
     const results = await this.db
       .select()
       .from(groceryListItems)
-      .where(eq(groceryListItems.listId, listId))
+      .where(eq(groceryListItems.listId, list.id))
 
-    const items = results.map((row) => this.mapToEntity(row))
-    const validItems = items
-      .filter((item) => item.isOk())
-      .map((item) => item.unwrap())
+    const items = mapper.mapMany(results)
 
-    return validItems
-    // Or Result.all(...) for later
-  }
-
-  async findByUserId(userId: UserType["id"]): Promise<ItemEntity[]> {
-    // Note: This would require joining with grocery_lists to get items by user
-    // For now, returning empty array as this method might need to be implemented differently
-    // based on your actual use case
-    return []
+    return items
   }
 
   async update(
@@ -125,10 +127,10 @@ export class DrizzleItemRepository extends ItemRepository {
       return R.Err(new ItemNotFoundError(id))
     }
 
-    return this.mapToEntity(updated)
+    return mapper.mapOne(updated)
   }
 
-  async delete(id: ItemType["id"]): Promise<Result<void, ItemNotFoundError>> {
+  async delete(id: ItemType["id"]): Promise<RepoUnitResult<ItemNotFoundError>> {
     const result = await this.db
       .delete(groceryListItems)
       .where(eq(groceryListItems.id, id))
@@ -138,13 +140,15 @@ export class DrizzleItemRepository extends ItemRepository {
       return R.Err(new ItemNotFoundError(id))
     }
 
-    return R.Ok(undefined)
+    return R.UNIT_RESULT
   }
 
-  async deleteByListId(listId: GroceryListType["id"]): Promise<void> {
+  async deleteByList(list: GroceryListType): Promise<RepoUnitResult> {
     await this.db
       .delete(groceryListItems)
-      .where(eq(groceryListItems.listId, listId))
+      .where(eq(groceryListItems.listId, list.id))
+
+    return R.UNIT_RESULT
   }
 
   async count(filters: GroceryItemFilters): Promise<number> {
@@ -169,20 +173,5 @@ export class DrizzleItemRepository extends ItemRepository {
     )
 
     return c
-  }
-
-  private mapToEntity(
-    row: typeof groceryListItems.$inferSelect,
-  ): RepoResult<ItemEntity, ParseError> {
-    return Item.fromEncoded({
-      id: row.id,
-      listId: row.listId,
-      name: row.name,
-      quantity: row.quantity,
-      status: row.status,
-      createdBy: row.createdBy,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    })
   }
 }
