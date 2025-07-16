@@ -1,13 +1,15 @@
-import { useSuspenseQuery } from "@tanstack/react-query"
-import type { orpc as OrpcType } from "../orpc"
+import { QueryClient, useSuspenseQuery } from "@tanstack/react-query"
+import type { OrpcReactQuery } from "../orpc"
 import { orpc } from "../orpc"
 
-export const dashboardStatsQueryOptions = (orpcClient: typeof OrpcType) => {
-  return orpcClient.authenticated.groceryList.getStats.queryOptions()
+const dashboardStatsQueryOptions = (orpc: OrpcReactQuery) => {
+  return orpc.authenticated.groceryList.getStats.queryOptions({
+    retry: 2,
+  })
 }
 
-export const recentListsQueryOptions = (orpcClient: typeof OrpcType) => {
-  return orpcClient.authenticated.groceryList.fetchRecentLists.queryOptions({
+const recentListsQueryOptions = (orpc: OrpcReactQuery) => {
+  return orpc.authenticated.groceryList.fetchRecentLists.queryOptions({
     select: (data) => data.items,
     retry: 2,
   })
@@ -18,3 +20,13 @@ export const useDashboardStats = () =>
 
 export const useRecentLists = () =>
   useSuspenseQuery(recentListsQueryOptions(orpc))
+
+export const prefetchDashboardStats = (
+  queryClient: QueryClient,
+  orpc: OrpcReactQuery,
+) => queryClient.ensureQueryData(dashboardStatsQueryOptions(orpc))
+
+export const prefetchRecentLists = (
+  queryClient: QueryClient,
+  orpc: OrpcReactQuery,
+) => queryClient.ensureQueryData(recentListsQueryOptions(orpc))

@@ -29,8 +29,10 @@ export const prefetchList = (queryClient: QueryClient, id: string) =>
   queryClient.ensureQueryData(listQueryOptions(id))
 export const useList = (id: string) => useSuspenseQuery(listQueryOptions(id))
 
-export const prefetchLists = (queryClient: QueryClient, params: Params = {}) =>
-  queryClient.ensureQueryData(listsQueryOptions(params))
+export const prefetchLists = (queryClient: QueryClient) =>
+  queryClient.ensureQueryData(
+    listsQueryOptions({ limit: 5, page: 1, search: "" }),
+  )
 
 export const useLists = (params: Params = {}) =>
   useSuspenseQuery(listsQueryOptions(params))

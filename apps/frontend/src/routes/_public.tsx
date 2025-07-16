@@ -1,18 +1,8 @@
-import { Center, Container } from "@mantine/core"
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
-
-const PublicLayout = () => {
-  return (
-    <Container h="100vh" size="xs">
-      <Center h="100%">
-        <Outlet />
-      </Center>
-    </Container>
-  )
-}
+import { PublicPageLayout } from "@app/pages/layouts/public"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_public")({
-  component: PublicLayout,
+  component: PublicPageLayout,
   beforeLoad: ({ context }) => {
     if (context.user) {
       throw redirect({ to: "/" })
