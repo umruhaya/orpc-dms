@@ -1,5 +1,5 @@
 import { Result, type UNIT } from "@carbonteq/fp"
-import { ParseError } from "@effect/schema/ParseResult"
+import { ParseError } from "effect/ParseResult"
 
 import {
   ConflictError,

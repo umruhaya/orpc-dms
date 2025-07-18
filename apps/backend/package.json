@@ -41,6 +41,7 @@
     "env-var": "^7.5.0",
     "fast-jwt": "^6.0.2",
     "hono": "^4.8.4",
+    "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "catalog:",
     "zod": "catalog:"

@@ -1,4 +1,4 @@
-import type { UserEntity } from "@repo/domain"
+import type { UserEntity } from "@domain/user"
 
 /**
  * Helper functions for common operations

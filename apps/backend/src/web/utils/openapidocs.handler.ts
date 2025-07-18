@@ -42,6 +42,7 @@ export const addOpenApiDocs = async (
     name: "auth",
     description: "Authentication with BetterAuth",
   }
+  authSpecs.servers = [{ url: '/auth' }] // $CONTRIB #1
   authSpecs.tags = authSpecs.tags.map((t) => {
     if (t.name !== "Default") return t
 

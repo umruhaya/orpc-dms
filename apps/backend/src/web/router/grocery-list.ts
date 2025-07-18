@@ -35,6 +35,7 @@ const createGroceryHandler = base.createGroceryList.handler(async () => {
 
 const updateGroceryHandler = base.updateGroceryList.handler(
   async ({ input, context }) => {
+
     throw new Error("Not implemented yet")
   },
 )

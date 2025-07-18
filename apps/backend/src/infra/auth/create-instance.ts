@@ -7,6 +7,7 @@ import { openAPI } from "better-auth/plugins"
 import { z } from "zod/v4"
 import { CORS_TRUSTED_ORIGINS } from "@/constants"
 import type { AppDatabase } from "../db/conn"
+import { bearer } from "better-auth/plugins"
 
 const beforeHooks = createAuthMiddleware(async (ctx) => {
   if (ctx.path === "/sign-up/email") {
@@ -45,7 +46,7 @@ export const createBetterAuthInstance = <T extends Record<string, any>>(
     },
     appName: config.app.APP_NAME,
     trustedOrigins: CORS_TRUSTED_ORIGINS,
-    plugins: [openAPI({ disableDefaultReference: true })],
+    plugins: [openAPI({ disableDefaultReference: true }), bearer()], // $CONTRIB #2
     // https://www.better-auth.com/docs/guides/optimizing-for-performance#cookie-cache
 
     // TODO: add redis for shared session cache storage
