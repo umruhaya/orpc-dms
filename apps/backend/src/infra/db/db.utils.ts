@@ -2,6 +2,9 @@ import type { DateTimeEncoded, UUIDType } from "@domain/utils/refined-types"
 import { timestamp, uuid } from "drizzle-orm/pg-core"
 
 // simple branded type occurs only at the type level
+export const getUUIDKeyCol = <T extends UUIDType = UUIDType>() =>
+  uuid("id").$type<T>().defaultRandom()
+
 export const getPrimaryKeyCol = <T extends UUIDType = UUIDType>() =>
   uuid("id").$type<T>().primaryKey().defaultRandom()
 
