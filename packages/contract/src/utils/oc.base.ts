@@ -9,7 +9,7 @@ const zodErrorSchema = z.object({
 })
 
 export const appPublicBase = oc.errors({
-  INPUT_VALIDATION_FAILED: {
+  UNPROCESSABLE_CONTENT: {
     status: 422,
     message: "Input validation failed",
 
@@ -21,7 +21,7 @@ export const appAuthenticatedBase = appPublicBase.errors({
   // Could be due to Bearer token being not present or invalid or expired, or no user for the payload id.
   // The end user should not be shown the exact reason for better security
   // Internal logs should be used to properly identify the issue
-  NotAuthenticated: {
+  UNAUTHORIZED: {
     status: 401,
     message: "No associated user or session",
   },
