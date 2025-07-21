@@ -16,15 +16,15 @@ export const DocumentVersionSchema = defineEntityStruct({
 })
 
 // Create Schema
-export const DocumentCreateSchema = DocumentVersionSchema.pipe(
-    S.pick("title", "description", "fileType", "contentUri"),
+export const DocumentVersionCreateSchema = DocumentVersionSchema.pipe(
+    S.pick("id","version" ,"title", "description", "fileType", "contentUri"),
 )
 
 // No Update Schema, Since this resource is Immutable
 
 // CRUD Types
 export type DocumentVersionType = S.Schema.Type<typeof DocumentVersionSchema>
-export type DocumentVersionCreateData = S.Schema.Type<typeof DocumentCreateSchema>
+export type DocumentVersionCreateData = S.Schema.Type<typeof DocumentVersionCreateSchema>
 
 const bridge = createEncoderDecoderBridge(DocumentVersionSchema)
 
@@ -53,8 +53,6 @@ export class DocumentVersionEntity extends BaseEntity implements DocumentVersion
     ): DocumentVersionEntity {
         const documentData: DocumentVersionType = {
             ...data,
-            id: DocumentId.make(UUID.new()),
-            version: 1,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
         }
