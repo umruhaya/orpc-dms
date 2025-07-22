@@ -9,7 +9,7 @@ import {
 } from "tsyringe"
 import config from "@/infra/config"
 
-import * as schema from "./schema"
+import { schema } from "./schema"
 
 export const createDbInstance = () => {
   const client = new SQL(config.db.DB_URL, {

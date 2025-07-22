@@ -21,8 +21,10 @@ import { and, eq, gte } from "drizzle-orm"
 import { injectable } from "tsyringe"
 import type { AppDatabase } from "../conn"
 import { InjectDb } from "../conn"
-import { groceryListItems } from "../schema"
+import { schema } from "../schema"
 import { enhanceEntityMapper } from "./repo.utils"
+
+const { groceryListItems } = schema
 
 const mapper = enhanceEntityMapper(
   (row: typeof groceryListItems.$inferSelect) =>

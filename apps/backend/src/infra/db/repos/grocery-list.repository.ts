@@ -24,8 +24,10 @@ import { and, asc, desc, eq, gte, ilike } from "drizzle-orm"
 import { injectable } from "tsyringe"
 import type { AppDatabase } from "../conn"
 import { InjectDb } from "../conn"
-import { groceryLists } from "../schema"
+import { schema } from "../schema"
 import { enhanceEntityMapper } from "./repo.utils"
+
+const { groceryLists } = schema
 
 const mapper = enhanceEntityMapper((row: typeof groceryLists.$inferSelect) =>
   GList.fromEncoded({
