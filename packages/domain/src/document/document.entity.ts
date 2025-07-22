@@ -15,7 +15,7 @@ export const DocumentSchema = defineEntityStruct({
     // denormalize/calculated values (from the latest version, to enable search filters)
     currentVersion: Opt(S.NonNegativeInt),
     title: Opt(S.String.pipe(S.minLength(1), S.maxLength(64))),
-    fileType: Opt(S.String),
+    fileType: Opt(S.String.pipe(S.NullOr)),
 })
 
 // Create Schema
@@ -33,6 +33,9 @@ export const DocumentUpdateSchema = S.partialWith(
 
 // CRUD Types
 export type DocumentType = S.Schema.Type<typeof DocumentSchema>
+export type DocumentEncoded = S.Schema.Encoded<
+  typeof DocumentSchema
+>
 export type DocumentCreateData = S.Schema.Type<typeof DocumentCreateSchema>
 export type DocumentUpdateData = S.Schema.Type<typeof DocumentUpdateSchema>
 
@@ -79,7 +82,7 @@ export class DocumentEntity extends BaseEntity implements DocumentType {
         return new DocumentEntity(data)
     }
 
-    static fromEncoded(data: DocumentType): Result<DocumentEntity, ParseError> {
+    static fromEncoded(data: DocumentEncoded): Result<DocumentEntity, ParseError> {
         return bridge.deserialize(data).map(d => new DocumentEntity(d))
     }
 

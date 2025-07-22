@@ -19,6 +19,7 @@ export const documentAccess = pgTable(
 	{
         // Base Columns
         id: uuid("id")
+            .notNull()
             .$type<DocumentAccessId>()
             .defaultRandom(),
         createdAt: timestamp("created_at")

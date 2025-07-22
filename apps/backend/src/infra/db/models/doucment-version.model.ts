@@ -11,6 +11,7 @@ export const documentVersion = pgTable(
   {
     // Base Columns
     id: uuid("id")
+        .notNull()
         .$type<DocumentId>()
         .defaultRandom()
         .references(() => document.id),

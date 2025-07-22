@@ -1,5 +1,5 @@
 import { type DocumentType } from "@domain/document/document.entity"
-import { pgTable, text, uuid } from "drizzle-orm/pg-core"
+import { integer, pgTable, text, uuid } from "drizzle-orm/pg-core"
 import { getBaseColumns } from "../db.utils"
 import { relations } from "drizzle-orm"
 import { documentVersion } from "./doucment-version.model"
@@ -12,11 +12,11 @@ type UserId = UserType["id"]
 
 export const document = pgTable("documents", {
     ...getBaseColumns<DocumentId>(),
-    currentVersion: text("current_version").notNull(),
     labels: text('labels').array().notNull(),
-
-    title: text("title").notNull(),
-    fileType: text("file_type").notNull(),
+    
+    title: text("title"),
+    fileType: text("file_type"),
+    currentVersion: integer("current_version"),
 
     createdBy: uuid('created_by')
         .$type<UserId>()

@@ -14,6 +14,9 @@ export const DocumentVersionSchema = defineEntityStruct({
     fileType: S.String,
     contentUri: S.String,
 })
+export type DocumentVersionEncoded = S.Schema.Encoded<
+  typeof DocumentVersionSchema
+>
 
 // Create Schema
 export const DocumentVersionCreateSchema = DocumentVersionSchema.pipe(
@@ -64,7 +67,7 @@ export class DocumentVersionEntity extends BaseEntity implements DocumentVersion
         return new DocumentVersionEntity(data)
     }
 
-    static fromEncoded(data: DocumentVersionType): Result<DocumentVersionEntity, ParseError> {
+    static fromEncoded(data: DocumentVersionEncoded): Result<DocumentVersionEntity, ParseError> {
         return bridge.deserialize(data).map(d => new DocumentVersionEntity(d))
     }
 
