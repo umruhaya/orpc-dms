@@ -42,6 +42,5 @@ export const DocumentVersionDetailsSchema = DocumentVersionSchema.pipe(
 export type DocumentVersionDetails = S.Schema.Encoded<
   typeof DocumentVersionDetailsSchema
 >
-
-export type GetDocumentVerionsParams = S.Schema.Encoded<typeof GetDocumentVersionsParamsSchema>
+export type GetDocumentVerionsParams = S.Schema.Type<typeof GetDocumentVersionsParamsSchema>
 export type GetDocumentVerionsResult = S.Schema.Encoded<typeof GetDocumentVersionsResultSchema>

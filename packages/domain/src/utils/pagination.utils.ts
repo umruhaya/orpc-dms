@@ -1,8 +1,9 @@
 import { Schema as S } from "effect"
 
+// $CONTRIB #3
 export const PaginationParamsSchema = S.Struct({
-  page: S.optional(S.Number.pipe(S.positive())),
-  limit: S.optional(S.Number.pipe(S.positive(), S.lessThanOrEqualTo(100))),
+  page: S.optional(S.NumberFromString.pipe(S.positive())),
+  limit: S.optional(S.NumberFromString.pipe(S.positive(), S.lessThanOrEqualTo(100))),
   sortBy: S.optional(S.String),
   sortOrder: S.optional(S.Union(S.Literal("asc"), S.Literal("desc"))),
 })
@@ -42,6 +43,7 @@ export const getDefaultPagination = (params?: Partial<PaginationParams>) => {
   return {
     page: params?.page ?? DEFAULT_PAGE,
     limit: params?.limit ?? DEFAULT_LIMIT,
+    offset: params?.page ? (params.page * (params.limit ?? DEFAULT_LIMIT)) : 0,
     sortOrder: params?.sortOrder ?? DEFAULT_SORT_ORDER,
   }
 }
@@ -68,3 +70,9 @@ export const createPaginatedResult = <T>(
     hasPrevious: page > 1,
   }
 }
+
+export const PaginationUtils = {
+  calculateOffset,
+  getDefaultPagination,
+  createPaginatedResult,
+} as const

@@ -9,6 +9,7 @@
 5. file for registering stuff in Dependency Injection [apps/backend/src/infra/di/index.ts](apps/backend/src/infra/di/index.ts)
 6. for db setup, first you actually need to install some pg driver, i installed `pg` library in backend, then ran `bun db:migrate` to run the migrations, then i was able to interact with db and better auth
 7. for auth, using scalar, one of the common issue is that the better auth instance is actually hosted under `/auth` path as seen [here](apps/backend/src/infra/auth/create-instance.ts), however scalar docs do not reflects this and tries requests on `/` causing 404 errors.
+8. limit and page filters have validation because effect schema does not coerce the string inputs to numbers, so added `Coerced Number Feature`. also need to dervice typed using `Schema.Type` instead of `Schema.Encoded` so `limit` and `page` property is infered as `number` instead of `string`.
 
 ## Todos
 
@@ -20,3 +21,4 @@ all the contribution points will be marked with token `$CONTRIB` and Find in All
 
 1. Refer to Issue#7, We explicitly specify that base path for better auth routes is `/auth` [OpenAPI Docs File](apps/backend/src/web/utils/openapidocs.handler.ts)
 2. bearer auth plugin added to enable token based authentication
+3. refer to Issue#8

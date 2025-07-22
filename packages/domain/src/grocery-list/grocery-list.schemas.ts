@@ -48,5 +48,5 @@ export type GroceryListDetails = S.Schema.Encoded<
   typeof GroceryListDetailsSchema
 >
 
-export type GetListsParams = S.Schema.Encoded<typeof GetListsParamsSchema>
+export type GetListsParams = S.Schema.Type<typeof GetListsParamsSchema>
 export type GetListsResult = S.Schema.Encoded<typeof GetListsResultSchema>

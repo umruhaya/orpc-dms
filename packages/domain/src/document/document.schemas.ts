@@ -43,5 +43,5 @@ export type DocumentDetails = S.Schema.Encoded<
   typeof DocumentDetailsSchema
 >
 
-export type GetDocumentsParams = S.Schema.Encoded<typeof GetDocumentsParamsSchema>
+export type GetDocumentsParams = S.Schema.Type<typeof GetDocumentsParamsSchema>
 export type GetDocumentsResult = S.Schema.Encoded<typeof GetDocumentsResultSchema>
