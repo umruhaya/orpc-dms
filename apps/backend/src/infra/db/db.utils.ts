@@ -3,9 +3,6 @@ import { type SQL } from "drizzle-orm"
 import { timestamp, uuid } from "drizzle-orm/pg-core"
 
 // simple branded type occurs only at the type level
-export const getUUIDKeyCol = <T extends UUIDType = UUIDType>() =>
-  uuid("id").$type<T>().defaultRandom()
-
 export const getPrimaryKeyCol = <T extends UUIDType = UUIDType>() =>
   uuid("id").$type<T>().primaryKey().defaultRandom()
 

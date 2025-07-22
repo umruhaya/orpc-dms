@@ -1,9 +1,14 @@
 import { type DocumentType } from "@domain/document/document.entity"
-import { integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core"
-import { getBaseColumns, getUUIDKeyCol } from "../db.utils"
-import type { DateTimeEncoded } from "@domain/utils"
+import { pgTable, text, uuid } from "drizzle-orm/pg-core"
+import { getBaseColumns } from "../db.utils"
+import { relations } from "drizzle-orm"
+import { documentVersion } from "./doucment-version.model"
+import { documentAccess } from "./document-access.model"
+import { user } from "./auth.model"
+import type { UserType } from "@domain/user/user.entity"
 
 type DocumentId = DocumentType["id"]
+type UserId = UserType["id"]
 
 export const document = pgTable("documents", {
     ...getBaseColumns<DocumentId>(),
@@ -12,25 +17,22 @@ export const document = pgTable("documents", {
 
     title: text("title").notNull(),
     fileType: text("file_type").notNull(),
+
+    createdBy: uuid('created_by')
+        .$type<UserId>()
+        .defaultRandom() 
+        .notNull()
+        .references(() => user.id, { onDelete: 'cascade' }),
 })
 
-export const documentVersion = pgTable("documents_version", {
-    id: getUUIDKeyCol<DocumentId>().references(() => document.id),
-    version: integer("version").notNull(),
-    
-    title: text("title").notNull(),
-    description: text("description"),
-    fileType: text("file_type").notNull(),
-    contentUri: text("content_uri").notNull(),
-
-    createdAt: timestamp("created_at")
-        .$type<DateTimeEncoded>()
-        .notNull()
-        .defaultNow(),
-    updatedAt: timestamp("updated_at")
-        .$type<DateTimeEncoded>()
-        .notNull()
-        .defaultNow(),
-}, table => [
-    primaryKey({ name: 'id_version_pk', columns: [table.id, table.version] }),
-])
+export const documentRelations = relations(
+    document,
+    ({ one, many }) => ({
+        version: many(documentVersion),
+        access: many(documentAccess),
+        user: one(user, {
+            fields: [document.createdBy],
+            references: [user.id],
+        })
+    })
+)

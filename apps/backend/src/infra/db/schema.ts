@@ -1,2 +1,5 @@
 export * from "./models/auth.model.ts"
+export * from "./models/document.model.ts"
+export * from "./models/document-access.model.ts"
+export * from "./models/doucment-version.model.ts"
 export * from "./models/grocery-list.model.ts"
