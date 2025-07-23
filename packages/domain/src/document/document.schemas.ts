@@ -1,22 +1,25 @@
 import { DocumentSchema } from "@domain/document/document.entity"
-import { UserSchema } from "@domain/user/user.entity"
 import {
   PaginatedResultSchema,
   PaginationParamsSchema,
 } from "@domain/utils/pagination.utils"
 import { Schema as S } from "effect"
 
-const documents = DocumentSchema.pipe(S.omit("createdBy"))
+// This properly handles encoding values as `T | null` instead of Option object `{ value?: T }`
+export const GetDocumentSchema = DocumentSchema.pipe(
+  S.omit("title", "fileType", "currentVersion"),
+  S.extend(
+    S.Struct({
+      currentVersion: S.NullOr(S.NonNegativeInt),
+      title: S.NullOr(S.String.pipe(S.minLength(1), S.maxLength(64))),
+      fileType: S.NullOr(S.String.pipe(S.NullOr)),
+    })
+  )
+)
 
-export type DocumentEncoded = Omit<
-  S.Schema.Encoded<typeof documents>,
-  "createdAt" | "updatedAt"
-> & {
-  createdAt: number | string
-  updatedAt: number | string
-}
+export type DocumentEncoded = S.Schema.Encoded<typeof DocumentSchema>
 
-export const GetDocumentsParamsSchema = PaginationParamsSchema.pipe(
+export const DocumentsFilterParamsSchema = PaginationParamsSchema.pipe(
   S.extend(
     S.Struct({
       title: S.optional(S.String),
@@ -26,22 +29,8 @@ export const GetDocumentsParamsSchema = PaginationParamsSchema.pipe(
   ),
 )
 
-export const GetDocumentsResultSchema = PaginatedResultSchema(documents)
-export const DocumentDetailsSchema = DocumentSchema.pipe(
-  S.omit("createdBy"),
-  S.extend(
-    S.Struct({
-      originalAuthor: UserSchema,
-      stats: S.Struct({
-        totalItems: S.Number,
-      }),
-    }),
-  ),
-)
+export type DocumentsFilterParams = S.Schema.Type<typeof DocumentsFilterParamsSchema>
 
-export type DocumentDetails = S.Schema.Encoded<
-  typeof DocumentDetailsSchema
->
+export const PaginatedDocumentSchema = PaginatedResultSchema(GetDocumentSchema)
 
-export type GetDocumentsParams = S.Schema.Type<typeof GetDocumentsParamsSchema>
-export type GetDocumentsResult = S.Schema.Encoded<typeof GetDocumentsResultSchema>
+export type PaginatedDocument = S.Schema.Encoded<typeof PaginatedDocumentSchema>

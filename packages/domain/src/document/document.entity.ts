@@ -20,7 +20,7 @@ export const DocumentSchema = defineEntityStruct({
 
 // Create Schema
 export const DocumentCreateSchema = DocumentSchema.pipe(
-    S.pick("labels", "createdBy"),
+    S.pick("labels"),
 )
 
 // Update Schema
@@ -83,7 +83,12 @@ export class DocumentEntity extends BaseEntity implements DocumentType {
     }
 
     static fromEncoded(data: DocumentEncoded): Result<DocumentEntity, ParseError> {
-        return bridge.deserialize(data).map(d => new DocumentEntity(d))
+        console.log({ data })
+        const a = bridge.deserialize(data)
+        console.log({ a: a.safeUnwrap() })
+        const b = a.map(d => new DocumentEntity(d))
+        console.log({ b })
+        return b
     }
 
     // Standard Serialization method

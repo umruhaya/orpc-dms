@@ -7,8 +7,9 @@ import {
     DocumentUpdateSchema,
 } from "@domain/document/document.entity"
 import {
-    GetDocumentsParamsSchema,
-    GetDocumentsResultSchema,
+    GetDocumentSchema,
+    PaginatedDocumentSchema,
+    DocumentsFilterParamsSchema
 } from "@domain/document/document.schemas"
 // Document Versions Schemas
 import {
@@ -50,8 +51,8 @@ export const getDocuments = documentsBase
     summary: "Get Documents with pagination and filters",
     tags: [DOCUMENT_TAG],
   })
-  .input(S.standardSchemaV1(GetDocumentsParamsSchema))
-  .output(S.standardSchemaV1(GetDocumentsResultSchema))
+  .input(S.standardSchemaV1(DocumentsFilterParamsSchema))
+  .output(S.standardSchemaV1(PaginatedDocumentSchema))
 
 export const getDocumentById = documentsBase
   .route({
@@ -62,7 +63,7 @@ export const getDocumentById = documentsBase
     inputStructure: "detailed",
   })
   .input(S.standardSchemaV1(DocumentIdParamSchema))
-  .output(S.standardSchemaV1(GetDocumentsResultSchema))
+  .output(S.standardSchemaV1(GetDocumentSchema))
   .errors({
     NOT_FOUND: { status: 404, message: "Document Not Found" },
   })
