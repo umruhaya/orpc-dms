@@ -15,6 +15,12 @@ import {
   groceryListsRelations,
 } from "./models/grocery-list.model.ts"
 
+export * from "./models/auth.model.ts"
+export * from "./models/document.model.ts"
+export * from "./models/doucment-version.model.ts"
+export * from "./models/document-access.model.ts"
+export * from "./models/grocery-list.model.ts"
+
 // Export a single schema object combining all your table and relations definitions.
 export const schema = {
   // Auth models
