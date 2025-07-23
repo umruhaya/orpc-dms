@@ -83,12 +83,7 @@ export class DocumentEntity extends BaseEntity implements DocumentType {
     }
 
     static fromEncoded(data: DocumentEncoded): Result<DocumentEntity, ParseError> {
-        console.log({ data })
-        const a = bridge.deserialize(data)
-        console.log({ a: a.safeUnwrap() })
-        const b = a.map(d => new DocumentEntity(d))
-        console.log({ b })
-        return b
+        return bridge.deserialize(data).map(d => new DocumentEntity(d))
     }
 
     // Standard Serialization method

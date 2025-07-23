@@ -53,8 +53,6 @@ export class DrizzleDocumentRepository extends DocumentRepository {
         updatedAt: new Date(doc.updatedAt.epochMillis),
       } satisfies typeof schema.document.$inferInsert
 
-      console.log({values})
-
       const [inserted] = await this.db
         .insert(schema.document)
         .values(values)
@@ -148,8 +146,6 @@ export class DrizzleDocumentRepository extends DocumentRepository {
                 .offset(offset)
                 .execute()
         ])        
-
-        console.debug({ documents })
 
         const docResult = docMapper.mapMany(documents)
 

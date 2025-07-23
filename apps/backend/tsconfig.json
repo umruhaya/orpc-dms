@@ -15,6 +15,6 @@
       "@application/*": ["../../packages/application/src/*"]
     }
   },
-  "include": ["src", "./*.ts"],
+  "include": ["src", "test", "./*.ts"],
   "exclude": ["node_modules", ".git", "dist"]
 }
